@@ -33,4 +33,11 @@ function init() {
         port: args.get<number>('port'),
     }
 }
+
+
+try {
+    await init();
+} catch (error) {
+    if (!Arguments.isArgumentException(error)) throw error;
+}
 ```
