@@ -1,57 +1,72 @@
 import { parse } from "https://deno.land/std/flags/mod.ts";
+import { ArgumentException } from "./ArgumentException.ts";
+import { HelpException } from "./HelpException.ts";
+import { ValueException } from "./ValueException.ts";
 
-
-// deno-lint-ignore-file
-type InputProcessor<V> = {
+export type ExpectationProcessorType<V> = {
+    // deno-lint-ignore no-explicit-any
     (value: any): V;
+}
+
+export type ExpectationType<V = unknown> = {
+    name: string | string[],
+    fallback?: V,
+    description?: string,
+    processor?: ExpectationProcessorType<V>
 }
 
 
 export class Arguments {
-
     // deno-lint-ignore no-explicit-any
-    private inputs: any;
+    private raw: any;
 
-
-    private list: {
+    private expectations: {
         names: string[],
-        description: string,
-        processor: InputProcessor<unknown>
+        description: string | null,
+        fallback: unknown | null,
+        processor: ExpectationProcessorType<unknown>
     }[] = [];
 
 
-    constructor() {
-        this.inputs = parse(Deno.args);
+    constructor(...expectations: ExpectationType[]) {
+        this.expectations = this.createExpectations(expectations)
+
+        this.raw = parse(Deno.args);
     }
 
 
-    expect<V>(names: string | string[], description: string, processor: InputProcessor<V>) {
-        if (typeof names === 'string') names = [names];
+    private createExpectations(expectation: ExpectationType[]) {
+        return expectation.map(ex => {
+            const names = ((n) => {
+                if (typeof n == 'string')
+                    return n.trim().split(/\s+|\s*,\s*/g);
+                else
+                    return n.map(m => m.trim());
+            })(ex.name);
 
-        const registred = this.list.reduce((acc, l) => {
-            acc.push(...l.names)
+            const description = ((des) => {
+                if (des) return des.trim();
+                return null;
+            })(ex.description);
 
-            return acc;
-        }, ['help']);
+            const fallback = ex.fallback ?? null;
+            
+            const processor = ex.processor ?? ((v) => v);
 
-        names.forEach(name => {
-            if (registred.includes(name)) {
-                throw new Error(`Argument "${name}" is already exist.`);
+            return {
+                names,
+                description,
+                fallback,
+                processor
             }
         });
-
-        this.list.push({
-            names,
-            description,
-            processor
-        })
     }
 
 
     getRaw(...names: string[]) {
         for (let i = 0; i < names.length; i++) {
             const name = names[i];
-            if (this.inputs[name] !== undefined) return this.inputs[name];
+            if (this.raw[name] !== undefined) return this.raw[name];
         }
 
         return undefined;
@@ -59,30 +74,46 @@ export class Arguments {
 
 
     get<V>(name: string): V {
-        const item = this.list.find(l => l.names.find(n => n === name));
+        const expectation = this.expectations.find(ex => ex.names.find(n => n === name));
 
-        if (!item) throw new Error(`Argument "${name}" is not found.`);
+        if (!expectation) throw new Error(`Argument "${name}" is not found.`);
 
-        const input = this.getRaw(...item.names);
-        return item.processor(input) as V;
+        const value = this.getRaw(...expectation.names);
+        return expectation.processor(value ?? expectation.fallback) as V;
     }
 
 
-    hasHelp(): boolean {
-        return this.getRaw('help') === true;
+    shouldHelp(): boolean {
+        return !!this.getRaw('help');
     }
 
 
     getHelpMessage(): string {
-        return this.list.map(l => {
-            const names = l.names.map(n => `--${n}`).join(', ')
+        return this.expectations.map(ex => {
+            const names = ex.names.map(n => `--${n}`).join(', ')
 
-            return [
-                '',
-                `  ${names}`,
-                `        ${l.description}`,
-                '',
-            ].join('\n');
+            const lines = [];
+            lines.push(`  ${names}`);
+
+            if (ex.description) {
+                lines.push(`        ${ex.description}`);
+            }
+
+            return ['', ...lines, ''].join('\n');
         }).join('\n');
+    }
+
+
+    triggerHelpException() {
+        throw new HelpException(this.getHelpMessage());
+    }
+
+
+    static createValueException(message: string): ValueException {
+        return new ValueException(message);
+    }
+
+    static isArgumentException(error: Error): boolean {
+        return error instanceof ArgumentException;
     }
 }
