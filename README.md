@@ -1,25 +1,36 @@
 # Arguments
 
+Knihovnička pro Deno, která parsuje vtupní paramtery terminálu.
+Umožňuje jim přiřazovat výhozí hodnoty, zpracovávat je a automaticky generovat zprávu pro `--help`.
+
 ```ts
-const args = new Arguments();
+function init() {
+    const configProcessor = (v: string | null): string => {
+        if (v == null)
+            throw new ValueException(`Cesta konfiguračního souboru není nastavena. Nastavíte jí pomocí "--config=<path>"`)
 
-args.expect(
-    ['port', 'p'],
-    `HTTP port.`,
-    (v?: string | number): number => {
-        if (v === undefined) return 8080;
-
-        return parseInt(v.toString());
+        return join(Deno.cwd(), v);
     }
-);
 
 
-if (args.hasHelp()) {
-    console.log(args.getHelpMessage());
-}
+    const args = new Arguments({
+        name: 'config, c',
+        description: `Cesta na konfigujrační soubor ve formátu JSON.`,
+        processor: configProcessor
+    }, {
+        name: 'port, p',
+        description: `HTTP port.`,
+        processor: (v: string | number) => parseInt(v.toString()),
+        fallback: 8080,
+    });
 
 
-const options = {
-    port: args.get<number>('port'),
+    // Help
+    if (args.shouldHelp()) args.triggerHelpException();
+
+
+    const values = {
+        port: args.get<number>('port'),
+    }
 }
 ```
