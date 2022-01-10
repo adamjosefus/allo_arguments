@@ -21,7 +21,7 @@ function init() {
         name: 'port, p',
         description: `HTTP port.`,
         processor: (v: string | number) => parseInt(v.toString()),
-        fallback: 8080,
+        default: 8080,
     });
 
 
@@ -29,7 +29,8 @@ function init() {
     if (args.shouldHelp()) args.triggerHelpException();
 
 
-    const values = {
+    const config = {
+        port: args.get<string>('config'),
         port: args.get<number>('port'),
     }
 }
