@@ -1,5 +1,5 @@
 import { parse } from "https://deno.land/std@0.120.0/flags/mod.ts";
-import { bold, gray } from "https://deno.land/std@0.120.0/fmt/colors.ts";
+import { bold, italic, gray } from "https://deno.land/std@0.120.0/fmt/colors.ts";
 import { ArgumentException } from "./ArgumentException.ts";
 import { HelpException } from "./HelpException.ts";
 import { ValueException } from "./ValueException.ts";
@@ -32,6 +32,7 @@ export class Arguments {
 
 
     private desciprion: string | null = null;
+    private version: string | null = null;
 
 
     constructor(...expectations: ExpectationType[]) {
@@ -99,6 +100,11 @@ export class Arguments {
     }
 
 
+    setVersion(version: string) {
+        this.version = version.replace(/v([0-9]+(\.[0-9]+)*)/g, (match, p1) => p1);
+    }
+
+
     getHelpMessage(): string {
         const docs = this.expectations.map(ex => {
             const margin = '        ';
@@ -108,7 +114,6 @@ export class Arguments {
             lines.push(`  ${names}`);
 
             if (ex.description) {
-                
                 ex.description.split('\n').forEach(d => {
                     lines.push(`${margin}${gray(d)}`);
                 });
@@ -121,9 +126,21 @@ export class Arguments {
             return ['', ...lines, ''].join('\n');
         }).join('\n');
 
-        return [this.desciprion ?? '', docs]
-            .filter(s => s !== '')
-            .join('\n');
+
+        const description: string[] = [];
+
+        if (this.desciprion) {
+            description.push(`${this.desciprion}`);
+        }
+
+        if (this.version) {
+            description.push(gray(italic(`Verze: ${this.version}`)));
+        }
+
+        return [
+            description.join('\r\n'),
+            docs
+        ].filter(s => s !== '').join('\n');
     }
 
 
