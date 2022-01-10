@@ -1,4 +1,5 @@
-import { parse } from "https://deno.land/std@0.117.0/flags/mod.ts";
+import { parse } from "https://deno.land/std@0.120.0/flags/mod.ts";
+import { bold, italic, gray } from "https://deno.land/std@0.120.0/fmt/colors.ts";
 import { ArgumentException } from "./ArgumentException.ts";
 import { HelpException } from "./HelpException.ts";
 import { ValueException } from "./ValueException.ts";
@@ -12,7 +13,7 @@ export type ExpectationProcessorType<V> = {
 
 export type ExpectationType<V = unknown> = {
     name: string | string[],
-    fallback?: V,
+    default?: V,
     description?: string,
     processor?: ExpectationProcessorType<V>
 }
@@ -25,12 +26,13 @@ export class Arguments {
     private expectations: {
         names: string[],
         description: string | null,
-        fallback: unknown | null,
+        default: unknown | null,
         processor: ExpectationProcessorType<unknown>
     }[] = [];
 
 
     private desciprion: string | null = null;
+    private version: string | null = null;
 
 
     constructor(...expectations: ExpectationType[]) {
@@ -54,14 +56,14 @@ export class Arguments {
                 return null;
             })(ex.description);
 
-            const fallback = ex.fallback ?? null;
+            const defaultValue = ex.default ?? null;
             
             const processor = ex.processor ?? ((v) => v);
 
             return {
                 names,
                 description,
-                fallback,
+                default: defaultValue,
                 processor
             }
         });
@@ -84,7 +86,7 @@ export class Arguments {
         if (!expectation) throw new Error(`Argument "${name}" is not found.`);
 
         const value = this.getRaw(...expectation.names);
-        return expectation.processor(value ?? expectation.fallback) as V;
+        return expectation.processor(value ?? expectation.default) as V;
     }
 
 
@@ -98,23 +100,47 @@ export class Arguments {
     }
 
 
+    setVersion(version: string) {
+        this.version = version.replace(/v([0-9]+(\.[0-9]+)*)/g, (match, p1) => p1);
+    }
+
+
     getHelpMessage(): string {
         const docs = this.expectations.map(ex => {
-            const names = ex.names.map(n => `--${n}`).join(', ')
+            const margin = '        ';
+            const names = ex.names.map(n => `--${bold(n)}`).join(', ')
 
             const lines = [];
             lines.push(`  ${names}`);
 
             if (ex.description) {
-                lines.push(`        ${ex.description}`);
+                ex.description.split('\n').forEach(d => {
+                    lines.push(`${margin}${gray(d)}`);
+                });
+            }
+
+            if (ex.default !== null) {
+                lines.push(`${margin}${gray('Výchozí hodnota:')} ${Deno.inspect(ex.default, { colors: true })}`);
             }
 
             return ['', ...lines, ''].join('\n');
         }).join('\n');
 
-        return [this.desciprion ?? '', docs]
-            .filter(s => s !== '')
-            .join('\n');
+
+        const description: string[] = [];
+
+        if (this.desciprion) {
+            description.push(`${this.desciprion}`);
+        }
+
+        if (this.version) {
+            description.push(gray(italic(`Verze: ${this.version}`)));
+        }
+
+        return [
+            description.join('\r\n'),
+            docs
+        ].filter(s => s !== '').join('\n');
     }
 
 
