@@ -69,6 +69,7 @@ function init() {
     );
 
     args.setDescription(`Nástroj na naklonování a aktualizaci repozitářů.`)
+    args.setVersion('v1.0.0');
 
 
     // Help
