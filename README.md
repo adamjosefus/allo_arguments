@@ -24,6 +24,12 @@ function init() {
         default: 8080,
     });
 
+    args.setDescription('Popise mého programu.');
+    
+    args.setVersion('v1.0.0');
+    
+    args.keepProcessAlive();
+
 
     // Help
     if (args.shouldHelp()) args.triggerHelpException();
