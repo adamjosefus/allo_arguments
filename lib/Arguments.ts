@@ -57,7 +57,7 @@ export class Arguments {
             })(ex.description);
 
             const defaultValue = ex.default ?? null;
-            
+
             const processor = ex.processor ?? ((v) => v);
 
             return {
@@ -102,6 +102,13 @@ export class Arguments {
 
     setVersion(version: string) {
         this.version = version.replace(/v([0-9]+(\.[0-9]+)*)/g, (match, p1) => p1);
+    }
+
+
+    keepProcessAlive(message = 'Pro ukončení procesu stiskněte klávesu Enter...') {
+        globalThis.addEventListener('unload', () => {
+            prompt(message);
+        }, { once: true });
     }
 
 
