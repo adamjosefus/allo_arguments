@@ -1,5 +1,5 @@
 import { parse } from "https://deno.land/std@0.125.0/flags/mod.ts";
-import { bold, italic, gray } from "./helpers/colors.ts";
+import { bold, gray } from "./helpers/colors.ts";
 import { Exception } from "./Exception.ts";
 import { HelpException } from "./HelpException.ts";
 import { ValueException } from "./ValueException.ts";
@@ -47,7 +47,6 @@ export class Arguments {
 
 
     #desciprion: string | null = null;
-    #version: string | null = null;
 
 
     constructor(...declarations: DeclarationType[]) {
@@ -115,11 +114,6 @@ export class Arguments {
     }
 
 
-    setVersion(version: string) {
-        this.#version = version.replace(/v([0-9]+(\.[0-9]+)*)/g, (_match, p1) => p1);
-    }
-
-
     keepProcessAlive(message = 'Pro ukončení procesu stiskněte klávesu Enter...') {
         globalThis.addEventListener('unload', () => {
             prompt(message);
@@ -153,10 +147,6 @@ export class Arguments {
 
         if (this.#desciprion) {
             description.push(`${this.#desciprion}`);
-        }
-
-        if (this.#version) {
-            description.push(gray(italic(`Verze: ${this.#version}`)));
         }
 
         return [
