@@ -17,3 +17,8 @@ export const gray = (s: string): string => {
     if (Deno.noColor) return s;
     return colors.gray(s);
 }
+
+
+export const inspect = (s: string): string => {
+    return Deno.inspect(s, { colors: !Deno.noColor });
+}
