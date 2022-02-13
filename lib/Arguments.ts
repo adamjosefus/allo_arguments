@@ -1,5 +1,5 @@
 import { parse } from "https://deno.land/std@0.125.0/flags/mod.ts";
-import { bold, gray } from "./helpers/colors.ts";
+import { primary, secondary } from "./helpers/colors.ts";
 import { Exception } from "./Exception.ts";
 import { HelpException } from "./HelpException.ts";
 import { ValueException } from "./ValueException.ts";
@@ -124,19 +124,19 @@ export class Arguments {
     getHelpMessage(): string {
         const docs = this.#declarations.map(ex => {
             const indent = '        ';
-            const names = ex.names.map(n => `--${bold(n)}`).join(', ')
+            const names = ex.names.map(n => `--${primary(n)}`).join(', ')
 
             const lines = [];
             lines.push(`  ${names}`);
 
             if (ex.description) {
                 ex.description.split('\n').forEach(d => {
-                    lines.push(`${indent}${gray(d)}`);
+                    lines.push(`${indent}${secondary(d)}`);
                 });
             }
 
             if (ex.default !== null) {
-                lines.push(`${indent}${gray('Výchozí hodnota:')} ${Deno.inspect(ex.default, { colors: true })}`);
+                lines.push(`${indent}${secondary('Výchozí hodnota:')} ${Deno.inspect(ex.default, { colors: true })}`);
             }
 
             return ['', ...lines, ''].join('\n');
