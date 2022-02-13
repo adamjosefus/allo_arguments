@@ -85,7 +85,7 @@ export class Arguments {
     }
 
 
-    getRaw(...names: string[]) {
+    #getRaw(...names: string[]) {
         for (let i = 0; i < names.length; i++) {
             const name = names[i];
             if (this.#raw[name] !== undefined) return this.#raw[name];
@@ -106,7 +106,7 @@ export class Arguments {
 
 
     shouldHelp(): boolean {
-        return !!this.getRaw('help');
+        return !!this.#getRaw('help');
     }
 
 
@@ -174,6 +174,7 @@ export class Arguments {
     static createValueException(message: string): ValueException {
         return new ValueException(message);
     }
+
 
     static isArgumentException(error: Error): boolean {
         return error instanceof Exception;
