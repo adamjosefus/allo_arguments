@@ -12,9 +12,24 @@ export type ConverterType<V> = {
 
 
 export type ExpectationType<V = unknown> = {
+    /**
+     * The name of the argument. (e.g. `"port"`)
+     * 
+     * You can add multiple names, using array or comma-separated string.
+     * (e.g. `["port", "p"]` or `"port,p"`)
+     */
     name: string | string[],
+    /**
+     * Default/initial value of the argument.
+     */
     default?: V,
+    /**
+     * The description of the argument.
+     */
     description?: string,
+    /**
+     * Convert value to the specified type.
+     */
     convertor?: ConverterType<V>
 }
 
