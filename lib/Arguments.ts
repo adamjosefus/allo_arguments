@@ -11,7 +11,7 @@ export type ConverterType<V> = {
 }
 
 
-export type ExpectationType<V = unknown> = {
+export type DeclarationType<V = unknown> = {
     /**
      * The name of the argument. (e.g. `"port"`)
      * 
@@ -38,7 +38,7 @@ export class Arguments {
     // deno-lint-ignore no-explicit-any
     #raw: any;
 
-    #expectations: {
+    #declarations: {
         names: string[],
         description: string | null,
         default: unknown | null,
@@ -50,30 +50,30 @@ export class Arguments {
     #version: string | null = null;
 
 
-    constructor(...expectations: ExpectationType[]) {
-        this.#expectations = this.#createExpectations(expectations)
+    constructor(...declarations: DeclarationType[]) {
+        this.#declarations = this.#createDeclarations(declarations)
 
         this.#raw = parse(Deno.args);
     }
 
 
-    #createExpectations(expectation: ExpectationType[]) {
-        return expectation.map(ex => {
+    #createDeclarations(declarations: DeclarationType[]) {
+        return declarations.map(dec => {
             const names = ((n) => {
                 if (typeof n == 'string')
                     return n.trim().split(/\s+|\s*,\s*/g);
                 else
                     return n.map(m => m.trim());
-            })(ex.name);
+            })(dec.name);
 
             const description = ((des) => {
                 if (des) return des.trim();
                 return null;
-            })(ex.description);
+            })(dec.description);
 
-            const defaultValue = ex.default ?? null;
+            const defaultValue = dec.default ?? null;
 
-            const convertor = ex.convertor ?? ((v) => v);
+            const convertor = dec.convertor ?? ((v) => v);
 
             return {
                 names,
@@ -96,7 +96,7 @@ export class Arguments {
 
 
     get<V>(name: string): V {
-        const expectation = this.#expectations.find(ex => ex.names.find(n => n === name));
+        const expectation = this.#declarations.find(ex => ex.names.find(n => n === name));
 
         if (!expectation) throw new Error(`Argument "${name}" is not found.`);
 
@@ -128,7 +128,7 @@ export class Arguments {
 
 
     getHelpMessage(): string {
-        const docs = this.#expectations.map(ex => {
+        const docs = this.#declarations.map(ex => {
             const indent = '        ';
             const names = ex.names.map(n => `--${bold(n)}`).join(', ')
 
