@@ -1,4 +1,4 @@
-import * as colors from "https://deno.land/std@0.120.0/fmt/colors.ts";
+import * as colors from "https://deno.land/std@0.125.0/fmt/colors.ts";
 
 
 export const bold = (s: string): string => {
