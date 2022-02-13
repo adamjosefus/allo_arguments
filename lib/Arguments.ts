@@ -96,12 +96,12 @@ export class Arguments {
 
 
     get<V>(name: string): V {
-        const expectation = this.#declarations.find(ex => ex.names.find(n => n === name));
+        const declarations = this.#declarations.find(ex => ex.names.find(n => n === name));
 
-        if (!expectation) throw new Error(`Argument "${name}" is not found.`);
+        if (!declarations) throw new Error(`Argument "${name}" is not found.`);
 
-        const value = this.getRaw(...expectation.names);
-        return expectation.convertor(value ?? expectation.default) as V;
+        const value = this.#getRaw(...declarations.names);
+        return declarations.convertor(value ?? declarations.default) as V;
     }
 
 
