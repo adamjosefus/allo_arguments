@@ -15,7 +15,7 @@ export type ExpectationType<V = unknown> = {
     name: string | string[],
     default?: V,
     description?: string,
-    processor?: ConverterType<V>
+    convertor?: ConverterType<V>
 }
 
 
@@ -27,7 +27,7 @@ export class Arguments {
         names: string[],
         description: string | null,
         default: unknown | null,
-        processor: ConverterType<unknown>
+        convertor: ConverterType<unknown>
     }[] = [];
 
 
@@ -58,13 +58,13 @@ export class Arguments {
 
             const defaultValue = ex.default ?? null;
 
-            const processor = ex.processor ?? ((v) => v);
+            const convertor = ex.convertor ?? ((v) => v);
 
             return {
                 names,
                 description,
                 default: defaultValue,
-                processor
+                convertor
             }
         });
     }
@@ -86,7 +86,7 @@ export class Arguments {
         if (!expectation) throw new Error(`Argument "${name}" is not found.`);
 
         const value = this.getRaw(...expectation.names);
-        return expectation.processor(value ?? expectation.default) as V;
+        return expectation.convertor(value ?? expectation.default) as V;
     }
 
 
@@ -101,7 +101,7 @@ export class Arguments {
 
 
     setVersion(version: string) {
-        this.#version = version.replace(/v([0-9]+(\.[0-9]+)*)/g, (match, p1) => p1);
+        this.#version = version.replace(/v([0-9]+(\.[0-9]+)*)/g, (_match, p1) => p1);
     }
 
 
