@@ -4,7 +4,8 @@ import { ArgumentException } from "./ArgumentException.ts";
 import { HelpException } from "./HelpException.ts";
 import { ValueException } from "./ValueException.ts";
 
-export type ExpectationProcessorType<V> = {
+
+export type ConverterType<V> = {
     // deno-lint-ignore no-explicit-any
     (value: any): V;
 }
@@ -14,7 +15,7 @@ export type ExpectationType<V = unknown> = {
     name: string | string[],
     default?: V,
     description?: string,
-    processor?: ExpectationProcessorType<V>
+    processor?: ConverterType<V>
 }
 
 
