@@ -1,4 +1,4 @@
-import { join } from "https://deno.land/std@0.120.0/path/mod.ts";
+import { join } from "https://deno.land/std@0.125.0/path/mod.ts";
 import { Arguments, ValueException } from "../mod.ts";
 
 
