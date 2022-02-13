@@ -1,6 +1,7 @@
-import { ArgumentException } from "./ArgumentException.ts";
+import { Exception } from "./Exception.ts";
 
-export class HelpException extends ArgumentException {
+
+export class HelpException extends Exception {
     constructor(message: string) {
         console.log('\n\n');
         console.log(message);

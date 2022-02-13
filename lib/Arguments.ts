@@ -1,6 +1,6 @@
 import { parse } from "https://deno.land/std@0.125.0/flags/mod.ts";
 import { bold, italic, gray } from "./helpers/colors.ts";
-import { ArgumentException } from "./ArgumentException.ts";
+import { Exception } from "./Exception.ts";
 import { HelpException } from "./HelpException.ts";
 import { ValueException } from "./ValueException.ts";
 
@@ -129,7 +129,7 @@ export class Arguments {
 
     getHelpMessage(): string {
         const docs = this.#expectations.map(ex => {
-            const margin = '        ';
+            const indent = '        ';
             const names = ex.names.map(n => `--${bold(n)}`).join(', ')
 
             const lines = [];
@@ -137,12 +137,12 @@ export class Arguments {
 
             if (ex.description) {
                 ex.description.split('\n').forEach(d => {
-                    lines.push(`${margin}${gray(d)}`);
+                    lines.push(`${indent}${gray(d)}`);
                 });
             }
 
             if (ex.default !== null) {
-                lines.push(`${margin}${gray('Výchozí hodnota:')} ${Deno.inspect(ex.default, { colors: true })}`);
+                lines.push(`${indent}${gray('Výchozí hodnota:')} ${Deno.inspect(ex.default, { colors: true })}`);
             }
 
             return ['', ...lines, ''].join('\n');
@@ -176,6 +176,6 @@ export class Arguments {
     }
 
     static isArgumentException(error: Error): boolean {
-        return error instanceof ArgumentException;
+        return error instanceof Exception;
     }
 }
