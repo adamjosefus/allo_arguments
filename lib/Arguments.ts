@@ -84,7 +84,8 @@ export class Arguments {
     }
 
 
-    #getRaw(...names: string[]) {
+    // deno-lint-ignore no-explicit-any
+    #getRaw(...names: string[]): any | undefined {
         for (let i = 0; i < names.length; i++) {
             const name = names[i];
             if (this.#raw[name] !== undefined) return this.#raw[name];
