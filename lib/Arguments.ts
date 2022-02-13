@@ -21,28 +21,28 @@ export type ExpectationType<V = unknown> = {
 
 export class Arguments {
     // deno-lint-ignore no-explicit-any
-    private raw: any;
+    #raw: any;
 
-    private expectations: {
+    #expectations: {
         names: string[],
         description: string | null,
         default: unknown | null,
-        processor: ExpectationProcessorType<unknown>
+        processor: ConverterType<unknown>
     }[] = [];
 
 
-    private desciprion: string | null = null;
-    private version: string | null = null;
+    #desciprion: string | null = null;
+    #version: string | null = null;
 
 
     constructor(...expectations: ExpectationType[]) {
-        this.expectations = this.createExpectations(expectations)
+        this.#expectations = this.#createExpectations(expectations)
 
-        this.raw = parse(Deno.args);
+        this.#raw = parse(Deno.args);
     }
 
 
-    private createExpectations(expectation: ExpectationType[]) {
+    #createExpectations(expectation: ExpectationType[]) {
         return expectation.map(ex => {
             const names = ((n) => {
                 if (typeof n == 'string')
@@ -73,7 +73,7 @@ export class Arguments {
     getRaw(...names: string[]) {
         for (let i = 0; i < names.length; i++) {
             const name = names[i];
-            if (this.raw[name] !== undefined) return this.raw[name];
+            if (this.#raw[name] !== undefined) return this.#raw[name];
         }
 
         return undefined;
@@ -81,7 +81,7 @@ export class Arguments {
 
 
     get<V>(name: string): V {
-        const expectation = this.expectations.find(ex => ex.names.find(n => n === name));
+        const expectation = this.#expectations.find(ex => ex.names.find(n => n === name));
 
         if (!expectation) throw new Error(`Argument "${name}" is not found.`);
 
@@ -96,12 +96,12 @@ export class Arguments {
 
 
     setDescription(description: string) {
-        this.desciprion = description;
+        this.#desciprion = description;
     }
 
 
     setVersion(version: string) {
-        this.version = version.replace(/v([0-9]+(\.[0-9]+)*)/g, (match, p1) => p1);
+        this.#version = version.replace(/v([0-9]+(\.[0-9]+)*)/g, (match, p1) => p1);
     }
 
 
@@ -113,7 +113,7 @@ export class Arguments {
 
 
     getHelpMessage(): string {
-        const docs = this.expectations.map(ex => {
+        const docs = this.#expectations.map(ex => {
             const margin = '        ';
             const names = ex.names.map(n => `--${bold(n)}`).join(', ')
 
@@ -136,12 +136,12 @@ export class Arguments {
 
         const description: string[] = [];
 
-        if (this.desciprion) {
-            description.push(`${this.desciprion}`);
+        if (this.#desciprion) {
+            description.push(`${this.#desciprion}`);
         }
 
-        if (this.version) {
-            description.push(gray(italic(`Verze: ${this.version}`)));
+        if (this.#version) {
+            description.push(gray(italic(`Verze: ${this.#version}`)));
         }
 
         return [
