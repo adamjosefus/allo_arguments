@@ -1,5 +1,5 @@
-import { parse } from "https://deno.land/std@0.120.0/flags/mod.ts";
-import { bold, italic, gray } from "https://deno.land/std@0.120.0/fmt/colors.ts";
+import { parse } from "https://deno.land/std@0.125.0/flags/mod.ts";
+import { bold, italic, gray } from "https://deno.land/std@0.125.0/fmt/colors.ts";
 import { ArgumentException } from "./ArgumentException.ts";
 import { HelpException } from "./HelpException.ts";
 import { ValueException } from "./ValueException.ts";
