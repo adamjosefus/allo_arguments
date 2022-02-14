@@ -1,6 +1,6 @@
-import { ArgumentException } from "./ArgumentException.ts";
+import { Exception } from "./Exception.ts";
 
-export class ValueException extends ArgumentException {
+export class ValueException extends Exception {
     constructor(message: string) {
         console.log('\n\n');
         message.split('\n').map(l => {
