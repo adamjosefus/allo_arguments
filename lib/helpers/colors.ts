@@ -13,6 +13,6 @@ export const secondary = (s: string): string => {
 }
 
 
-export const inspect = (s: string): string => {
+export const inspect = (s: unknown): string => {
     return Deno.inspect(s, { colors: !Deno.noColor });
 }
