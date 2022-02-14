@@ -45,9 +45,7 @@ export class Arguments {
         convertor: ConverterType<unknown>
     }[] = [];
 
-
     #desciprion: string | null = null;
-
 
     constructor(...declarations: DeclarationType[]) {
         this.#declarations = this.#createDeclarations(declarations)
@@ -115,7 +113,7 @@ export class Arguments {
     }
 
 
-    keepProcessAlive(message = 'Pro ukončení procesu stiskněte klávesu Enter...') {
+    keepProcessAlive(message = 'Press Enter key to exit the process...') {
         globalThis.addEventListener('unload', () => {
             prompt(message);
         }, { once: true });
@@ -137,7 +135,7 @@ export class Arguments {
             }
 
             if (ex.default !== null) {
-                lines.push(`${indent}${secondary('Výchozí hodnota:')} ${Deno.inspect(ex.default, { colors: true })}`);
+                lines.push(`${indent}${secondary('Default value:')} ${Deno.inspect(ex.default, { colors: true })}`);
             }
 
             return ['', ...lines, ''].join('\n');
