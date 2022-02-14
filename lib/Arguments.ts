@@ -1,79 +1,92 @@
-import { parse } from "https://deno.land/std@0.120.0/flags/mod.ts";
-import { bold, italic, gray } from "https://deno.land/std@0.120.0/fmt/colors.ts";
-import { ArgumentException } from "./ArgumentException.ts";
+import { parse } from "https://deno.land/std@0.125.0/flags/mod.ts";
+import { primary, secondary, inspect } from "./helpers/colors.ts";
+import { Exception } from "./Exception.ts";
 import { HelpException } from "./HelpException.ts";
 import { ValueException } from "./ValueException.ts";
 
 
-export type ExpectationProcessorType<V> = {
+export type ConverterType<V> = {
     // deno-lint-ignore no-explicit-any
     (value: any): V;
 }
 
 
-export type ExpectationType<V = unknown> = {
+export type DeclarationType<V = unknown> = {
+    /**
+     * The name of the argument. (e.g. `"port"`)
+     * 
+     * You can add multiple names, using array or comma-separated string.
+     * (e.g. `["port", "p"]` or `"port,p"`)
+     */
     name: string | string[],
+    /**
+     * Default/initial value of the argument.
+     */
     default?: V,
+    /**
+     * The description of the argument.
+     */
     description?: string,
-    processor?: ExpectationProcessorType<V>
+    /**
+     * Convert value to the specified type.
+     */
+    convertor?: ConverterType<V>
 }
 
 
 export class Arguments {
     // deno-lint-ignore no-explicit-any
-    private raw: any;
+    #raw: any;
 
-    private expectations: {
+    #declarations: {
         names: string[],
         description: string | null,
         default: unknown | null,
-        processor: ExpectationProcessorType<unknown>
+        convertor: ConverterType<unknown>
     }[] = [];
 
+    #desciprion: string | null = null;
 
-    private desciprion: string | null = null;
-    private version: string | null = null;
+    constructor(...declarations: DeclarationType[]) {
+        this.#declarations = this.#createDeclarations(declarations)
 
-
-    constructor(...expectations: ExpectationType[]) {
-        this.expectations = this.createExpectations(expectations)
-
-        this.raw = parse(Deno.args);
+        this.#raw = parse(Deno.args);
     }
 
 
-    private createExpectations(expectation: ExpectationType[]) {
-        return expectation.map(ex => {
+    #createDeclarations(declarations: DeclarationType[]) {
+        return declarations.map(dec => {
             const names = ((n) => {
                 if (typeof n == 'string')
                     return n.trim().split(/\s+|\s*,\s*/g);
                 else
                     return n.map(m => m.trim());
-            })(ex.name);
+            })(dec.name);
 
             const description = ((des) => {
                 if (des) return des.trim();
                 return null;
-            })(ex.description);
+            })(dec.description);
 
-            const defaultValue = ex.default ?? null;
+            const defaultValue = dec.default ?? null;
 
-            const processor = ex.processor ?? ((v) => v);
+            const convertor = dec.convertor ?? ((v) => v);
 
             return {
                 names,
                 description,
                 default: defaultValue,
-                processor
+                convertor
             }
         });
     }
 
 
-    getRaw(...names: string[]) {
+    // deno-lint-ignore no-explicit-any
+    #getRaw(...names: string[]): any | undefined {
         for (let i = 0; i < names.length; i++) {
             const name = names[i];
-            if (this.raw[name] !== undefined) return this.raw[name];
+            if (this.#raw[name] !== undefined) return this.#raw[name];
         }
 
         return undefined;
@@ -81,31 +94,26 @@ export class Arguments {
 
 
     get<V>(name: string): V {
-        const expectation = this.expectations.find(ex => ex.names.find(n => n === name));
+        const declarations = this.#declarations.find(ex => ex.names.find(n => n === name));
 
-        if (!expectation) throw new Error(`Argument "${name}" is not found.`);
+        if (!declarations) throw new Error(`Argument "${name}" is not found.`);
 
-        const value = this.getRaw(...expectation.names);
-        return expectation.processor(value ?? expectation.default) as V;
+        const value = this.#getRaw(...declarations.names);
+        return declarations.convertor(value ?? declarations.default) as V;
     }
 
 
     shouldHelp(): boolean {
-        return !!this.getRaw('help');
+        return !!this.#getRaw('help');
     }
 
 
     setDescription(description: string) {
-        this.desciprion = description;
+        this.#desciprion = description;
     }
 
 
-    setVersion(version: string) {
-        this.version = version.replace(/v([0-9]+(\.[0-9]+)*)/g, (match, p1) => p1);
-    }
-
-
-    keepProcessAlive(message = 'Pro ukončení procesu stiskněte klávesu Enter...') {
+    keepProcessAlive(message = 'Press Enter key to exit the process...') {
         globalThis.addEventListener('unload', () => {
             prompt(message);
         }, { once: true });
@@ -113,21 +121,21 @@ export class Arguments {
 
 
     getHelpMessage(): string {
-        const docs = this.expectations.map(ex => {
-            const margin = '        ';
-            const names = ex.names.map(n => `--${bold(n)}`).join(', ')
+        const docs = this.#declarations.map(ex => {
+            const indent = '        ';
+            const names = ex.names.map(n => `--${primary(n)}`).join(', ')
 
             const lines = [];
             lines.push(`  ${names}`);
 
             if (ex.description) {
                 ex.description.split('\n').forEach(d => {
-                    lines.push(`${margin}${gray(d)}`);
+                    lines.push(`${indent}${secondary(d)}`);
                 });
             }
 
             if (ex.default !== null) {
-                lines.push(`${margin}${gray('Výchozí hodnota:')} ${Deno.inspect(ex.default, { colors: true })}`);
+                lines.push(`${indent}${secondary('Default value:')} ${inspect(ex.default)}`);
             }
 
             return ['', ...lines, ''].join('\n');
@@ -136,12 +144,8 @@ export class Arguments {
 
         const description: string[] = [];
 
-        if (this.desciprion) {
-            description.push(`${this.desciprion}`);
-        }
-
-        if (this.version) {
-            description.push(gray(italic(`Verze: ${this.version}`)));
+        if (this.#desciprion) {
+            description.push(`${this.#desciprion}`);
         }
 
         return [
@@ -160,7 +164,8 @@ export class Arguments {
         return new ValueException(message);
     }
 
+
     static isArgumentException(error: Error): boolean {
-        return error instanceof ArgumentException;
+        return error instanceof Exception;
     }
 }
