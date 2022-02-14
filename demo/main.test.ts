@@ -1,9 +1,8 @@
 import { join } from "https://deno.land/std@0.125.0/path/mod.ts";
-import { Arguments, ValueException } from "../mod.ts";
+import { Arguments, ValueException } from "https://deno.land/x/allo_arguments/mod.ts";
 
 
-
-function init() {
+function getArguments() {
     const configConvertor = (v: string | null): string => {
         if (v == null) throw new ValueException(`Path to configuration file is not set. You can set it using "--config=<path>"`)
 
@@ -15,8 +14,8 @@ function init() {
         if (v === null) return null;
         if (typeof v === "string") v = parseInt(v, 10);
 
-        if (isNaN(v)) throw new ValueException(`Délka pauzy musí platné číslo číslo. "--sleep=<number>"`)
-        if (v <= 200) throw new ValueException(`Délka pauzy nesmí být menší než 200 ms. "--sleep=<number>"`)
+        if (isNaN(v)) throw new ValueException(`The sleep time must be a valid number. "--sleep=<number>"`)
+        if (v <= 200) throw new ValueException(`The sleep time must not be less than 200 ms. "--sleep=<number>"`)
 
         return v;
     }
@@ -60,14 +59,13 @@ function init() {
         sleep: args.get<number>('sleep'),
     }
 
-
-    console.log(values);
+    return values;
 }
 
 
 try {
-    // Dont forget to await! (in async scope of course).
-    await init();
+    const args = getArguments();
+    console.log(args);
 
 } catch (error) {
     if (!Arguments.isArgumentException(error)) throw error;
