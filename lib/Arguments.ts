@@ -1,5 +1,5 @@
 import { parse } from "https://deno.land/std@0.125.0/flags/mod.ts";
-import { primary, secondary } from "./helpers/colors.ts";
+import { primary, secondary, inspect } from "./helpers/colors.ts";
 import { Exception } from "./Exception.ts";
 import { HelpException } from "./HelpException.ts";
 import { ValueException } from "./ValueException.ts";
@@ -135,7 +135,7 @@ export class Arguments {
             }
 
             if (ex.default !== null) {
-                lines.push(`${indent}${secondary('Default value:')} ${Deno.inspect(ex.default, { colors: true })}`);
+                lines.push(`${indent}${secondary('Default value:')} ${inspect(ex.default)}`);
             }
 
             return ['', ...lines, ''].join('\n');
