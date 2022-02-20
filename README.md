@@ -7,7 +7,7 @@ It allows you to assign default values to them, process them and automatically g
 ## Example
 
 ```ts
-import { join } from "https://deno.land/std@0.125.0/path/mod.ts";
+import { join } from "https://deno.land/std@0.126.0/path/mod.ts";
 import { Arguments, ValueException } from "https://deno.land/x/allo_arguments/mod.ts";
 
 
