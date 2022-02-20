@@ -1,4 +1,4 @@
-import { parse } from "https://deno.land/std@0.125.0/flags/mod.ts";
+import { parse } from "https://deno.land/std@0.126.0/flags/mod.ts";
 import { primary, secondary, inspect } from "./helpers/colors.ts";
 import { Exception } from "./Exception.ts";
 import { HelpException } from "./HelpException.ts";

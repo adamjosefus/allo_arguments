@@ -1,5 +1,5 @@
-import { join } from "https://deno.land/std@0.125.0/path/mod.ts";
-import { Arguments, ValueException } from "https://deno.land/x/allo_arguments/mod.ts";
+import { join } from "https://deno.land/std@0.126.0/path/mod.ts";
+import { Arguments, ValueException } from "../mod.ts";
 
 
 function getArguments() {
