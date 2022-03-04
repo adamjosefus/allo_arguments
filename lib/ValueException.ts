@@ -1,4 +1,9 @@
+/**
+ * @copyright Copyright (c) 2022 Adam Josefus
+ */
+
 import { Exception } from "./Exception.ts";
+
 
 export class ValueException extends Exception {
     constructor(message: string) {

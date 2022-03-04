@@ -1,3 +1,7 @@
+/**
+ * @copyright Copyright (c) 2022 Adam Josefus
+ */
+
 import { parse } from "https://deno.land/std@0.128.0/flags/mod.ts";
 import { primary, secondary, inspect } from "./helpers/colors.ts";
 import { Exception } from "./Exception.ts";
