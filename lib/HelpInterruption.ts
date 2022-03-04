@@ -14,10 +14,3 @@ export class HelpInterruption extends PrintableException {
         super(message);
     }
 }
-
-
-/**
- * @deprecated Use `HelpInterruption` instead.
- */
-export class HelpException extends HelpInterruption {
-}
