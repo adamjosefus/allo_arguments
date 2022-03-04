@@ -164,6 +164,9 @@ export class Arguments {
     }
 
 
+    /**
+     * @deprecated Use `new ValueException()` instead.
+     */
     static createValueException(message: string): ValueException {
         return new ValueException(message);
     }
