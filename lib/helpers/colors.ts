@@ -1,4 +1,8 @@
-import * as colors from "https://deno.land/std@0.126.0/fmt/colors.ts";
+/**
+ * @copyright Copyright (c) 2022 Adam Josefus
+ */
+
+import * as colors from "https://deno.land/std@0.128.0/fmt/colors.ts";
 
 
 export const primary = (s: string): string => {
