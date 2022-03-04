@@ -4,8 +4,8 @@
 
 import { parse } from "https://deno.land/std@0.128.0/flags/mod.ts";
 import { primary, secondary, inspect } from "./helpers/colors.ts";
-import { Exception } from "./Exception.ts";
-import { HelpException } from "./HelpException.ts";
+import { PrintableException } from "./PrintableException.ts";
+import { HelpInterruption } from "./HelpInterruption.ts";
 import { ValueException } from "./ValueException.ts";
 
 
@@ -159,8 +159,16 @@ export class Arguments {
     }
 
 
+    triggerHelp() {
+        throw new HelpInterruption(this.getHelpMessage());
+    }
+
+
+    /**
+     * @deprecated Use `triggerHelp()` instead.
+     */
     triggerHelpException() {
-        throw new HelpException(this.getHelpMessage());
+        this.triggerHelp();
     }
 
 
@@ -172,7 +180,20 @@ export class Arguments {
     }
 
 
+    /**
+     * @deprecated Use `isPrintableException()` instead.
+     */
     static isArgumentException(error: Error): boolean {
-        return error instanceof Exception;
+        return Arguments.isPrintableException(error);
+    }
+
+
+    static isPrintableException(error: Error): boolean {
+        return error instanceof PrintableException;
+    }
+
+
+    static rethrowUnprintableException(error: Error) {
+        if (!Arguments.isPrintableException(error)) throw error;
     }
 }

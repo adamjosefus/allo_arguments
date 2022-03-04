@@ -18,7 +18,6 @@ function getArguments() {
         return join(Deno.cwd(), v);
     }
 
-
     const sleepConvertor = (v: string | number | null): number | null => {
         if (v === null) return null;
         if (typeof v === "string") v = parseInt(v, 10);
@@ -54,12 +53,10 @@ function getArguments() {
     );
 
     args.setDescription(`My beautiful program.`);
-
     args.keepProcessAlive();
 
-
     // Important for `--help` flag works.
-    if (args.shouldHelp()) args.triggerHelpException();
+    if (args.shouldHelp()) args.triggerHelp();
 
 
     const values = {
@@ -74,8 +71,8 @@ function getArguments() {
 
 try {
     const args = getArguments();
-    console.log(args);
 
+    console.log(args);
     // {
     //   config: "/some/project/path/config.json",
     //   delete: false,
@@ -83,7 +80,7 @@ try {
     // }
 
 } catch (error) {
-    if (!Arguments.isArgumentException(error)) throw error;
+    Arguments.rethrowUnprintableException(error);
 }
 
 ```
