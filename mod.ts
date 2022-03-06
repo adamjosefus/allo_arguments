@@ -2,7 +2,7 @@
  * @copyright Copyright (c) 2022 Adam Josefus
  */
 
-export * from "./lib/Arguments.ts"
-export * from "./lib/PrintableException.ts";
-export * from "./lib/HelpInterruption.ts";
-export * from "./lib/ValueException.ts";
+export * from "./libs/Arguments.ts"
+export * from "./libs/PrintableException.ts";
+export * from "./libs/HelpInterruption.ts";
+export * from "./libs/ValueException.ts";
