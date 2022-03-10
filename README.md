@@ -59,13 +59,11 @@ function getArguments() {
     if (args.shouldHelp()) args.triggerHelp();
 
 
-    const values = {
+    return {
         config: args.get<string>('config'),
         delete: args.get<boolean>('delete'),
         sleep: args.get<number>('sleep'),
     }
-
-    return values;
 }
 
 
@@ -82,7 +80,6 @@ try {
 } catch (error) {
     Arguments.rethrowUnprintableException(error);
 }
-
 ```
 
 ## Documentation 📖

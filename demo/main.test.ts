@@ -25,7 +25,6 @@ function getArguments() {
 
     const booleanConvertor = (v: boolean | string | null) => v === true || v === 'true';
 
-
     const args = new Arguments(
         {
             name: 'config, c',
@@ -54,13 +53,11 @@ function getArguments() {
     if (args.shouldHelp()) args.triggerHelp();
 
 
-    const values = {
+    return {
         config: args.get<string>('config'),
         delete: args.get<boolean>('delete'),
         sleep: args.get<number>('sleep'),
     }
-
-    return values;
 }
 
 
