@@ -2,7 +2,7 @@
  * @copyright Copyright (c) 2022 Adam Josefus
  */
 
-import { parse } from "https://deno.land/std@0.128.0/flags/mod.ts";
+import { parse } from "https://deno.land/std@0.129.0/flags/mod.ts";
 import { primary, secondary, inspect } from "./helpers/colors.ts";
 import { PrintableException } from "./PrintableException.ts";
 import { HelpInterruption } from "./HelpInterruption.ts";
@@ -52,7 +52,6 @@ export class Arguments {
 
     constructor(...declarations: DeclarationType[]) {
         this.#declarations = this.#createDeclarations(declarations)
-
         this.#raw = parse(Deno.args);
     }
 
@@ -60,10 +59,10 @@ export class Arguments {
     #createDeclarations(declarations: DeclarationType[]) {
         return declarations.map(dec => {
             const names = ((n) => {
-                if (typeof n == 'string')
+                if (typeof n == 'string') {
                     return n.trim().split(/\s+|\s*,\s*/g);
-                else
-                    return n.map(m => m.trim());
+                }
+                return n.map(m => m.trim());
             })(dec.name);
 
             const description = ((des) => {
@@ -166,7 +165,6 @@ export class Arguments {
     static isPrintableException(error: Error): boolean {
         return error instanceof PrintableException;
     }
-
 
     static rethrowUnprintableException(error: Error) {
         if (!Arguments.isPrintableException(error)) throw error;

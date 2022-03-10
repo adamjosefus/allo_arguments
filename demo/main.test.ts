@@ -2,7 +2,7 @@
  * @copyright Copyright (c) 2022 Adam Josefus
  */
 
-import { join } from "https://deno.land/std@0.128.0/path/mod.ts";
+import { join } from "https://deno.land/std@0.129.0/path/mod.ts";
 import { Arguments, ValueException } from "../mod.ts";
 
 
@@ -24,7 +24,6 @@ function getArguments() {
     }
 
     const booleanConvertor = (v: boolean | string | null) => v === true || v === 'true';
-
 
     const args = new Arguments(
         {
@@ -54,13 +53,11 @@ function getArguments() {
     if (args.shouldHelp()) args.triggerHelp();
 
 
-    const values = {
+    return {
         config: args.get<string>('config'),
         delete: args.get<boolean>('delete'),
         sleep: args.get<number>('sleep'),
     }
-
-    return values;
 }
 
 

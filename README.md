@@ -7,7 +7,7 @@ It allows you to assign default values to them, process them and automatically g
 ## Example
 
 ```ts
-import { join } from "https://deno.land/std@0.128.0/path/mod.ts";
+import { join } from "https://deno.land/std@0.129.0/path/mod.ts";
 import { Arguments, ValueException } from "https://deno.land/x/allo_arguments/mod.ts";
 
 
@@ -59,13 +59,11 @@ function getArguments() {
     if (args.shouldHelp()) args.triggerHelp();
 
 
-    const values = {
+    return {
         config: args.get<string>('config'),
         delete: args.get<boolean>('delete'),
         sleep: args.get<number>('sleep'),
     }
-
-    return values;
 }
 
 
@@ -82,7 +80,6 @@ try {
 } catch (error) {
     Arguments.rethrowUnprintableException(error);
 }
-
 ```
 
 ## Documentation 📖
