@@ -2,7 +2,7 @@
  * @copyright Copyright (c) 2022 Adam Josefus
  */
 
-import { parse } from "https://deno.land/std@0.128.0/flags/mod.ts";
+import { parse } from "https://deno.land/std@0.129.0/flags/mod.ts";
 import { primary, secondary, inspect } from "./helpers/colors.ts";
 import { PrintableException } from "./PrintableException.ts";
 import { HelpInterruption } from "./HelpInterruption.ts";
