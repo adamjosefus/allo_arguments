@@ -2,10 +2,10 @@
  * @copyright Copyright (c) 2022 Adam Josefus
  */
 
-import { parse } from "https://deno.land/std@0.129.0/flags/mod.ts";
+import { parse } from "https://deno.land/std@0.137.0/flags/mod.ts";
 import { primary, secondary, inspect } from "./helpers/colors.ts";
 import { PrintableException } from "./PrintableException.ts";
-import { HelpInterruption } from "./HelpInterruption.ts";
+import { InfoInterruption } from "./InfoInterruption.ts";
 
 
 export type ConverterType<V> = {
@@ -158,13 +158,14 @@ export class Arguments {
 
 
     triggerHelp() {
-        throw new HelpInterruption(this.getHelpMessage());
+        throw new InfoInterruption(this.getHelpMessage());
     }
 
 
     static isPrintableException(error: Error): boolean {
         return error instanceof PrintableException;
     }
+
 
     static rethrowUnprintableException(error: Error) {
         if (!Arguments.isPrintableException(error)) throw error;
