@@ -3,12 +3,12 @@
  */
 
 import { join } from "https://deno.land/std@0.129.0/path/mod.ts";
-import { Arguments, ValueException } from "../mod.ts";
+import { Arguments, ExpectedException } from "../mod.ts";
 
 
 function getArguments() {
     const configConvertor = (v: string | null): string => {
-        if (v == null) throw new ValueException(`Path to configuration file is not set. You can set it using "--config=<path>"`)
+        if (v == null) throw new ExpectedException(`Path to configuration file is not set. You can set it using "--config=<path>"`)
 
         return join(Deno.cwd(), v);
     }
@@ -17,8 +17,8 @@ function getArguments() {
         if (v === null) return null;
         if (typeof v === "string") v = parseInt(v, 10);
 
-        if (isNaN(v)) throw new ValueException(`The sleep time must be a valid number. "--sleep=<number>"`)
-        if (v <= 200) throw new ValueException(`The sleep time must not be less than 200 ms. "--sleep=<number>"`)
+        if (isNaN(v)) throw new ExpectedException(`The sleep time must be a valid number. "--sleep=<number>"`)
+        if (v <= 200) throw new ExpectedException(`The sleep time must not be less than 200 ms. "--sleep=<number>"`)
 
         return v;
     }
