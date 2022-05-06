@@ -2,7 +2,7 @@
  * @copyright Copyright (c) 2022 Adam Josefus
  */
 
-import { join } from "https://deno.land/std@0.137.0/path/mod.ts";
+import { join } from "https://deno.land/std@0.138.0/path/mod.ts";
 import { Arguments, ExpectedException } from "../mod.ts";
 
 

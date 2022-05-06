@@ -7,11 +7,11 @@ import { PrintableException } from "./PrintableException.ts";
 
 export class ExpectedException extends PrintableException {
     constructor(message: string) {
-        console.log('\n\n');
+        console.log('\n');
         message.split('\n').map(l => {
             console.log(`>> %c ${l}`, 'color: #ff4646; font-weight: bold;');
         });
-        console.log('\n\n');
+        console.log('\n');
 
         super(message);
 
