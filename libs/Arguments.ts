@@ -33,7 +33,11 @@ export type DeclarationType<V = unknown> = {
     /**
      * Convert value to the specified type.
      */
-    convertor?: ConverterType<V>
+    convertor?: ConverterType<V>,
+    /**
+     * Include the argument in the help output.
+     */
+    includeInHelp?: boolean,
 }
 
 
@@ -45,7 +49,8 @@ export class Arguments {
         names: string[],
         description: string | null,
         default: unknown | null,
-        convertor: ConverterType<unknown>
+        convertor: ConverterType<unknown>,
+        includeInHelp: boolean
     }[] = [];
 
     #desciprion: string | null = null;
@@ -74,11 +79,14 @@ export class Arguments {
 
             const convertor = dec.convertor ?? ((v) => v);
 
+            const includeInHelp = dec.includeInHelp ?? true;
+
             return {
                 names,
                 description,
                 default: defaultValue,
-                convertor
+                convertor,
+                includeInHelp,
             }
         });
     }
@@ -123,25 +131,27 @@ export class Arguments {
 
 
     getHelpMessage(): string {
-        const docs = this.#declarations.map(ex => {
-            const indent = '        ';
-            const names = ex.names.map(n => `--${primary(n)}`).join(', ')
+        const docs = this.#declarations
+            .filter(declaration => declaration.includeInHelp)
+            .map(declaration => {
+                const indent = '        ';
+                const names = declaration.names.map(n => `--${primary(n)}`).join(', ')
 
-            const lines = [];
-            lines.push(`  ${names}`);
+                const lines = [];
+                lines.push(`  ${names}`);
 
-            if (ex.description) {
-                ex.description.split('\n').forEach(d => {
-                    lines.push(`${indent}${secondary(d)}`);
-                });
-            }
+                if (declaration.description) {
+                    declaration.description.split('\n').forEach(d => {
+                        lines.push(`${indent}${secondary(d)}`);
+                    });
+                }
 
-            if (ex.default !== null) {
-                lines.push(`${indent}${secondary('Default value:')} ${inspect(ex.default)}`);
-            }
+                if (declaration.default !== null) {
+                    lines.push(`${indent}${secondary('Default value:')} ${inspect(declaration.default)}`);
+                }
 
-            return ['', ...lines, ''].join('\n');
-        }).join('\n');
+                return ['', ...lines, ''].join('\n');
+            }).join('\n');
 
 
         const description: string[] = [];
