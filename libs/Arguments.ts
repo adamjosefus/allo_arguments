@@ -131,7 +131,7 @@ export class Arguments {
 
 
     getHelpMessage(): string {
-        const docs = this.#declarations
+        const declarations = this.#declarations
             .filter(declaration => declaration.includeInHelp)
             .map(declaration => {
                 const indent = '        ';
@@ -141,29 +141,23 @@ export class Arguments {
                 lines.push(`  ${names}`);
 
                 if (declaration.description) {
-                    declaration.description.split('\n').forEach(d => {
-                        lines.push(`${indent}${secondary(d)}`);
-                    });
+                    declaration.description.split('\n').forEach(d => lines.push(`${indent}${secondary(d)}`));
                 }
 
                 if (declaration.default !== null) {
-                    lines.push(`${indent}${secondary('Default value:')} ${inspect(declaration.default)}`);
+                    lines.push(`${indent}${secondary('Default:')} ${inspect(declaration.default)}`);
                 }
 
-                return ['', ...lines, ''].join('\n');
-            }).join('\n');
+                return lines.join('\n');
+            }).join('\n\n');
 
 
-        const description: string[] = [];
-
-        if (this.#desciprion) {
-            description.push(`${this.#desciprion}`);
-        }
+        const description: string = this.#desciprion ?? '';
 
         return [
-            description.join('\r\n'),
-            docs
-        ].filter(s => s !== '').join('\n');
+            `\n${description}`,
+            `\n${declarations}`
+        ].filter(s => s.trim() !== '').join('\n');
     }
 
 
