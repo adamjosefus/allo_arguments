@@ -29,7 +29,7 @@ export type DeclarationType<V = unknown> = {
     /**
      * The description of the argument.
      */
-    description?: string,
+    description?: string | string[],
     /**
      * Convert value to the specified type.
      */
@@ -47,7 +47,7 @@ export class Arguments {
 
     #declarations: {
         names: string[],
-        description: string | null,
+        descriptionLines: string[] | null,
         default: unknown | null,
         convertor: ConverterType<unknown>,
         includeInHelp: boolean
@@ -70,8 +70,9 @@ export class Arguments {
                 return n.map(m => m.trim());
             })(dec.name);
 
-            const description = ((des) => {
-                if (des) return des.trim();
+            const descriptionLines = ((des) => {
+                if (Array.isArray(des)) return des;
+                if (des) return des.trim().split('\n');
                 return null;
             })(dec.description);
 
@@ -83,7 +84,7 @@ export class Arguments {
 
             return {
                 names,
-                description,
+                descriptionLines,
                 default: defaultValue,
                 convertor,
                 includeInHelp,
@@ -140,8 +141,8 @@ export class Arguments {
                 const lines = [];
                 lines.push(`  ${names}`);
 
-                if (declaration.description) {
-                    declaration.description.split('\n').forEach(d => lines.push(`${indent}${secondary(d)}`));
+                if (declaration.descriptionLines) {
+                    declaration.descriptionLines.forEach(d => lines.push(`${indent}${secondary(d)}`));
                 }
 
                 if (declaration.default !== null) {

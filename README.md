@@ -34,7 +34,10 @@ function getArguments() {
     const args = new Arguments(
         {
             name: 'config, c',
-            description: `Path to the configuration file in JSON format.`,
+            description: [
+                `Path to the configuration file.`,
+                `Format of file is JSON.`,
+            ],
             convertor: configConvertor,
             default: 'config.json'
         },
