@@ -57,7 +57,9 @@ export class Arguments {
 
     constructor(...declarations: DeclarationType[]) {
         this.#declarations = this.#createDeclarations(declarations)
-        this.#raw = parse(Deno.args);
+        this.#raw = parse(Deno.args, {
+            boolean: true
+        });
     }
 
 
