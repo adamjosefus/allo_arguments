@@ -9,12 +9,6 @@ import { PrintableException } from "./PrintableException.ts";
 import { InfoInterruption } from "./InfoInterruption.ts";
 
 
-interface Argument {
-    names: [long: string] | [long: string, short: string],
-    value: string | boolean,
-}
-
-
 type KeyByValue<T, V> = {
     [K in keyof T]: T[K] extends V ? K : never;
 }[keyof T];
@@ -49,7 +43,6 @@ export type Converter<T> = {
 export type Validator<T> = {
     (value: T): boolean;
 }
-
 
 
 const normalizeDeclarations = (declarations: Declaration<unknown>[]) => {
@@ -95,7 +88,6 @@ const normalizeDeclarations = (declarations: Declaration<unknown>[]) => {
     return new Map(entries);
 }
 
-
 export class Arguments {
     #declarations: ReturnType<typeof normalizeDeclarations>;
     #desciprion: string | null = null;
@@ -110,10 +102,10 @@ export class Arguments {
 
     #getRawFlag(primary: string, ...secondaries: (string | undefined)[]) {
         const names = [primary, ...secondaries]
-            .filter(n => n !== undefined)
-            .map(n => `${n}`)
-            .map(n => n.toLowerCase().trim())
-            .filter(n => n !== '');
+            .filter(n => n !== undefined) // remove undefined
+            .map(n => `${n}`) // Force string
+            .map(n => n.toLowerCase().trim()) // Normalize
+            .filter(n => n !== ''); // Remove empty
 
         const flag = this.#rawFlags.filter(r => r._tag === 'Flag') // Filter out commands
             .map(r => r as Flag) // Hack to make the type checker happy
@@ -161,7 +153,11 @@ export class Arguments {
                     const long = `--${dec.longName}`;
                     const short = dec.shortName ? `-${dec.shortName}` : '';
 
-                    const text = [long, short].filter(n => n !== '').join(', ');
+                    const text = [long, short]
+                        .filter(n => n !== '')
+                        .map(n => primary(n))
+                        .join(', ');
+
                     return tab(indent) + text;
                 }
 
