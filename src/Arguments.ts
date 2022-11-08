@@ -2,122 +2,139 @@
  * @copyright Copyright (c) 2022 Adam Josefus
  */
 
-import { parse } from "./libs/flags.ts";
+import { absurd } from "./helpers/absurd.ts";
+import { Command, Flag, parse } from "./model/parse.ts";
 import { primary, secondary, inspect } from "./helpers/colors.ts";
 import { PrintableException } from "./PrintableException.ts";
 import { InfoInterruption } from "./InfoInterruption.ts";
 
 
-export type ConverterType<V> = {
-    // deno-lint-ignore no-explicit-any
-    (value: any): V;
+interface Argument {
+    names: [long: string] | [long: string, short: string],
+    value: string | boolean,
 }
 
 
-export type DeclarationType<V = unknown> = {
-    /**
-     * The name of the argument. (e.g. `"port"`)
-     * 
-     * You can add multiple names, using array or comma-separated string.
-     * (e.g. `["port", "p"]` or `"port,p"`)
-     */
-    name: string | string[],
-    /**
-     * Default/initial value of the argument.
-     */
-    default?: V,
-    /**
-     * The description of the argument.
-     */
-    description?: string | string[],
-    /**
-     * Convert value to the specified type.
-     */
-    convertor?: ConverterType<V>,
-    /**
-     * Include the argument in the help output.
-     */
-    includeInHelp?: boolean,
+type KeyByValue<T, V> = {
+    [K in keyof T]: T[K] extends V ? K : never;
+}[keyof T];
+
+
+interface TypeMap {
+    'string': string,
+    'number': number,
+    'boolean': boolean,
+}
+
+export interface Declaration<T> {
+    name: T extends boolean ? [long: string, short: string] | [name: string] | string : [name: string] | string,
+    default?: {
+        value: T,
+        mode?: 'postConversion',
+    } | {
+        value: string | boolean,
+        mode: 'preConversion',
+    },
+    type?: KeyByValue<TypeMap, T> extends never ? Converter<T> : KeyByValue<TypeMap, T>,
+    validator?: Validator<T>,
+    description: string,
+    excludeFromHelp?: boolean,
+}
+
+
+export type Converter<T> = {
+    (value: undefined | string | boolean): T;
+}
+
+export type Validator<T> = {
+    (value: T): boolean;
+}
+
+
+
+const normalizeDeclarations = (declarations: Declaration<unknown>[]) => {
+    const entries = declarations.map(dec => {
+        const [longName, shortName] = [dec.name].flat() as [string, string?];
+
+        const description = dec.description?.trim().split('\n') ?? undefined
+
+        const convertor = (typeOrConvertor => {
+            if (typeof typeOrConvertor === 'function') return typeOrConvertor;
+
+            switch (typeOrConvertor) {
+                case 'string': return (v: unknown) => `${v}`;
+                case 'number': return (v: unknown) => Number(v);
+                case 'boolean': return (v: unknown) => {
+                    if (v === undefined) return false;
+                    if (v === null) return false;
+                    if (v === false) return false;
+
+                    if (v === true) return true;
+                    if (`${v}`.toLowerCase().trim() === 'true') return true;
+                    if (`${v}`.toLowerCase().trim() === '1') return true;
+
+                    return true;
+                }
+            }
+
+            return absurd(typeOrConvertor);
+        })(dec.type ?? 'string');
+
+        return {
+            longName,
+            shortName,
+            description,
+            default: dec.default,
+            convertor,
+            validator: dec.validator,
+            excludeFromHelp: dec.excludeFromHelp ?? false,
+        }
+    }).map(dec => [dec.longName, dec] as [string, typeof dec]);
+
+
+    return new Map(entries);
 }
 
 
 export class Arguments {
-    // deno-lint-ignore no-explicit-any
-    #raw: any;
-
-    #declarations: {
-        names: string[],
-        descriptionLines: string[] | null,
-        default: unknown | null,
-        convertor: ConverterType<unknown>,
-        includeInHelp: boolean
-    }[] = [];
-
+    #declarations: ReturnType<typeof normalizeDeclarations>;
     #desciprion: string | null = null;
 
-    constructor(...declarations: DeclarationType[]) {
-        this.#declarations = this.#createDeclarations(declarations)
-        this.#raw = parse(Deno.args, {
-            boolean: true
-        });
+    #rawFlags: (Command | Flag)[];
+
+    constructor(...declarations: Declaration<unknown>[]) {
+        this.#declarations = normalizeDeclarations(declarations)
+        this.#rawFlags = parse(Deno.args);
     }
 
 
-    #createDeclarations(declarations: DeclarationType[]) {
-        return declarations.map(dec => {
-            const names = ((n) => {
-                if (typeof n == 'string') {
-                    return n.trim().split(/\s+|\s*,\s*/g);
-                }
-                return n.map(m => m.trim());
-            })(dec.name);
+    #getRawFlag(primary: string, ...secondaries: (string | undefined)[]) {
+        const names = [primary, ...secondaries]
+            .filter(n => n !== undefined)
+            .map(n => `${n}`)
+            .map(n => n.toLowerCase().trim())
+            .filter(n => n !== '');
 
-            const descriptionLines = ((des) => {
-                if (Array.isArray(des)) return des;
-                if (des) return des.trim().split('\n');
-                return null;
-            })(dec.description);
+        const flag = this.#rawFlags.filter(r => r._tag === 'Flag') // Filter out commands
+            .map(r => r as Flag) // Hack to make the type checker happy
+            .find(r => names.includes(r.name.toLowerCase().trim()));
 
-            const defaultValue = dec.default ?? null;
-
-            const convertor = dec.convertor ?? ((v) => v);
-
-            const includeInHelp = dec.includeInHelp ?? true;
-
-            return {
-                names,
-                descriptionLines,
-                default: defaultValue,
-                convertor,
-                includeInHelp,
-            }
-        });
+        return flag;
     }
 
 
-    // deno-lint-ignore no-explicit-any
-    #getRaw(...names: string[]): any | undefined {
-        for (let i = 0; i < names.length; i++) {
-            const name = names[i];
-            if (this.#raw[name] !== undefined) return this.#raw[name];
-        }
+    get<T>(name: string): T {
+        const dec = this.#declarations.get(name);
 
-        return undefined;
-    }
+        if (!dec) throw new Error(`Argument "${name}" is not declared.`);
 
-
-    get<V>(name: string): V {
-        const declarations = this.#declarations.find(ex => ex.names.find(n => n === name));
-
-        if (!declarations) throw new Error(`Argument "${name}" is not found.`);
-
-        const value = this.#getRaw(...declarations.names);
-        return declarations.convertor(value ?? declarations.default) as V;
+        const value = this.#getRawFlag(dec.longName, dec.shortName);
+        return dec.convertor(value ?? dec.default) as T;
     }
 
 
     shouldHelp(): boolean {
-        return !!this.#getRaw('help');
+        return !!this.#getRawFlag('help');
     }
 
 
@@ -134,24 +151,29 @@ export class Arguments {
 
 
     getHelpMessage(): string {
-        const declarations = this.#declarations
-            .filter(declaration => declaration.includeInHelp)
-            .map(declaration => {
-                const indent = '        ';
-                const names = declaration.names.map(n => `--${primary(n)}`).join(', ')
+        const tab = (n = 1) => ' '.repeat(Math.max(n, 1) * 2);
 
-                const lines = [];
-                lines.push(`  ${names}`);
+        const declarations = Array.from(this.#declarations.entries())
+            .map(([_, dec]) => dec)
+            .filter(({ excludeFromHelp }) => !excludeFromHelp)
+            .map(dec => {
+                const names = (indent: number) => {
+                    const long = `--${dec.longName}`;
+                    const short = dec.shortName ? `-${dec.shortName}` : '';
 
-                if (declaration.descriptionLines) {
-                    declaration.descriptionLines.forEach(d => lines.push(`${indent}${secondary(d)}`));
+                    const text = [long, short].filter(n => n !== '').join(', ');
+                    return tab(indent) + text;
                 }
 
-                if (declaration.default !== null) {
-                    lines.push(`${indent}${secondary('Default:')} ${inspect(declaration.default)}`);
-                }
+                const description = (indent: number) => dec.description
+                    .map(l => secondary(l))
+                    .map(l => tab(indent) + l)
+                    .join('\n');
 
-                return lines.join('\n');
+                return [
+                    names(1),
+                    description(2),
+                ].join('\n');
             }).join('\n\n');
 
 
@@ -176,5 +198,15 @@ export class Arguments {
 
     static rethrowUnprintableException(error: Error) {
         if (!Arguments.isPrintableException(error)) throw error;
+    }
+
+
+    static createHelpDeclaration(): Declaration<boolean> {
+        return {
+            name: ['help', 'h'],
+            type: 'boolean',
+            description: 'Show this help message.',
+            excludeFromHelp: true,
+        }
     }
 }
