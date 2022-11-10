@@ -14,14 +14,5 @@ export class ExpectedException extends PrintableException {
         console.log('\n');
 
         super(message);
-
-        Deno.exit(1);
     }
-}
-
-
-/**
- * @deprecated Use `ExpectedException` instead.
- */
-export class ValueException extends ExpectedException {
 }

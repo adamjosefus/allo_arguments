@@ -2,7 +2,7 @@
  * @copyright Copyright (c) 2022 Adam Josefus
  */
 
-import * as colors from "../libs/colors.ts";
+import * as colors from "../../libs/deno_std/fmt_colors.ts";
 
 
 export const primary = (s: string): string => {

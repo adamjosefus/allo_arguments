@@ -12,14 +12,5 @@ export class InfoInterruption extends PrintableException {
         console.log('\n');
 
         super(message);
-        
-        Deno.exit(0);
     }
-}
-
-
-/**
- * @deprecated Use `InfoInterruption` instead.
- */
-export class HelpInterruption extends InfoInterruption {
 }
