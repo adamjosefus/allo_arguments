@@ -4,7 +4,7 @@
 
 import { absurd } from "./helpers/absurd.ts";
 import { Command, Flag, parse } from "./model/parse.ts";
-import { primary, secondary, inspect } from "./helpers/colors.ts";
+import { primary, secondary } from "./helpers/colors.ts";
 import { PrintableException } from "./PrintableException.ts";
 import { InfoInterruption } from "./InfoInterruption.ts";
 
@@ -20,19 +20,33 @@ interface TypeMap {
     'boolean': boolean,
 }
 
-export interface Declaration<T> {
-    name: T extends boolean ? [long: string, short: string] | [name: string] | string : [name: string] | string,
-    default?: {
-        value: T,
-        mode?: 'postConversion',
-    } | {
-        value: string | boolean,
-        mode: 'preConversion',
-    },
+
+interface CommandDeclaration {
+    name: string,
+    description: string[],
+}
+
+
+export interface FlagOptions<T> {
+    shortName?: string,
     type?: KeyByValue<TypeMap, T> extends never ? Converter<T> : KeyByValue<TypeMap, T>,
-    validator?: Validator<T>,
     description: string,
+    default?: () => T,
+    validator?: Validator<T>,
     excludeFromHelp?: boolean,
+}
+
+interface FlagDeclaration {
+    longName: string,
+    shortName: string | undefined,
+    description: string[],
+    // deno-lint-ignore no-explicit-any
+    default: (() => any) | undefined,
+    // deno-lint-ignore no-explicit-any
+    convertor: Converter<any>,
+    // deno-lint-ignore no-explicit-any
+    validator: Validator<any>,
+    excludeFromHelp: boolean,
 }
 
 
@@ -41,97 +55,172 @@ export type Converter<T> = {
 }
 
 export type Validator<T> = {
-    (value: T): boolean;
+    (value: T | undefined): boolean;
 }
 
 
-const normalizeDeclarations = (declarations: Declaration<unknown>[]) => {
-    const entries = declarations.map(dec => {
-        const [longName, shortName] = [dec.name].flat() as [string, string?];
+const normalizeName = (name: string) => name.trim().toLowerCase();
+const normalizeShortName = (name: string) => normalizeName(name).substring(0, 1);
 
-        const description = dec.description?.trim().split('\n') ?? undefined
 
-        const convertor = (typeOrConvertor => {
-            if (typeof typeOrConvertor === 'function') return typeOrConvertor;
+const normalizeFlagDeclaration = <T>(name: string, declaration: FlagOptions<T>): FlagDeclaration => {
+    const longName = normalizeName(name.trim());
+    const shortName = declaration.shortName ? normalizeShortName(declaration.shortName) : undefined;
 
-            switch (typeOrConvertor) {
-                case 'string': return (v: unknown) => `${v}`;
-                case 'number': return (v: unknown) => Number(v);
-                case 'boolean': return (v: unknown) => {
-                    if (v === undefined) return false;
-                    if (v === null) return false;
-                    if (v === false) return false;
+    const description = declaration.description?.trim().split('\n') ?? undefined
 
-                    if (v === true) return true;
-                    if (`${v}`.toLowerCase().trim() === 'true') return true;
-                    if (`${v}`.toLowerCase().trim() === '1') return true;
+    const convertor = (typeOrConvertor => {
+        if (typeof typeOrConvertor === 'function') return typeOrConvertor;
 
-                    return true;
-                }
+        switch (typeOrConvertor) {
+            case 'string': return (v: unknown) => `${v}`;
+            case 'number': return (v: unknown) => Number(v);
+            case 'boolean': return (v: unknown) => {
+                if (v === undefined) return false;
+                if (v === null) return false;
+                if (v === false) return false;
+
+                if (v === true) return true;
+                if (`${v}`.toLowerCase().trim() === 'true') return true;
+                if (`${v}`.toLowerCase().trim() === '1') return true;
+
+                return true;
             }
-
-            return absurd(typeOrConvertor);
-        })(dec.type ?? 'string');
-
-        return {
-            longName,
-            shortName,
-            description,
-            default: dec.default,
-            convertor,
-            validator: dec.validator,
-            excludeFromHelp: dec.excludeFromHelp ?? false,
         }
-    }).map(dec => [dec.longName, dec] as [string, typeof dec]);
 
+        return absurd(typeOrConvertor);
+    })(declaration.type ?? 'string');
 
-    return new Map(entries);
+    return {
+        longName,
+        shortName,
+        description,
+        default: declaration.default,
+        convertor,
+        validator: declaration.validator ?? (() => true) as Validator<unknown>,
+        excludeFromHelp: declaration.excludeFromHelp ?? false,
+    }
 }
+
+
+const helpFlagNames = ['help', 'h'] as const;
+
 
 export class Arguments {
-    #declarations: ReturnType<typeof normalizeDeclarations>;
-    #desciprion: string | null = null;
+    #flagDeclarations: Map<string, FlagDeclaration> = new Map();
+    #commandDeclaration: Map<string, CommandDeclaration> = new Map();
 
-    #rawFlags: (Command | Flag)[];
+    #desciprion: string | null;
+    #rawArgs: readonly Readonly<Flag | Command>[];
 
-    constructor(...declarations: Declaration<unknown>[]) {
-        this.#declarations = normalizeDeclarations(declarations)
-        this.#rawFlags = parse(Deno.args);
+
+    constructor(description?: string) {
+        this.#desciprion = description ?? null;
+        this.#rawArgs = parse(Deno.args);
     }
 
 
-    #getRawFlag(primary: string, ...secondaries: (string | undefined)[]) {
-        const names = [primary, ...secondaries]
-            .filter(n => n !== undefined) // remove undefined
-            .map(n => `${n}`) // Force string
-            .map(n => n.toLowerCase().trim()) // Normalize
-            .filter(n => n !== ''); // Remove empty
+    declareCommand(name: string, description: string) {
+        const declaration: CommandDeclaration = {
+            name,
+            description: description.trim().split('\n'),
+        };
 
-        const flag = this.#rawFlags.filter(r => r._tag === 'Flag') // Filter out commands
+        if (this.#commandDeclaration.has(declaration.name)) {
+            throw new Error(`Command "${declaration.name}" is already declared.`);
+        }
+
+        this.#commandDeclaration.set(declaration.name, declaration);
+
+        return this;
+    }
+
+
+    #getCommand(name: string): CommandDeclaration | undefined {
+        return this.#commandDeclaration.get(normalizeName(name));
+    }
+
+
+    hasCommand(name: string): boolean {
+        return this.#getCommand(name) !== undefined;
+    }
+
+
+    declareFlag<T>(name: string, options: FlagOptions<T>) {
+        const declaration: ReturnType<typeof normalizeFlagDeclaration<T>> = normalizeFlagDeclaration<T>(name, options);
+
+        if (this.#flagDeclarations.has(declaration.longName)) {
+            throw new Error(`Flag ${declaration.longName} already exists`);
+        }
+
+        const found = declaration.shortName !== undefined && Array.from(this.#flagDeclarations.values()).find(f => f.shortName === declaration.shortName);
+        if (found) {
+            throw new Error(`Flag ${declaration.shortName} already exists`);
+        }
+
+        this.#flagDeclarations.set(declaration.longName, declaration);
+
+        return this;
+    }
+
+
+    declareHelpFlag() {
+        this.declareFlag<boolean>(helpFlagNames[0], {
+            type: 'boolean',
+            shortName: helpFlagNames[1],
+            description: 'Show this help message.',
+            excludeFromHelp: true,
+        });
+
+        return this;
+    }
+
+
+    #getRawFlag(name: string) {
+        const flag = this.#rawArgs.filter(r => r._tag === 'Flag') // Filter out commands
             .map(r => r as Flag) // Hack to make the type checker happy
-            .find(r => names.includes(r.name.toLowerCase().trim()));
+            .find(r => normalizeName(name).includes(normalizeName(r.name)));
 
         return flag;
     }
 
 
-    get<T>(name: string): T {
-        const dec = this.#declarations.get(name);
+    #getFlag<T>(name: string): T | undefined {
+        const notFoundMessage = `Argument "${name}" is not declared.`;
 
-        if (!dec) throw new Error(`Argument "${name}" is not declared.`);
+        const dec = this.#flagDeclarations.get(normalizeName(name));
+        if (!dec) throw new Error(notFoundMessage);
 
-        const value = this.#getRawFlag(dec.longName, dec.shortName);
-        return dec.convertor(value ?? dec.default) as T;
+        const flag = this.#getRawFlag(dec.longName);
+        if (!flag) throw new Error(notFoundMessage);
+
+        const rawValue = this.#getRawFlag(dec.longName)?.value;
+        const value = (rawValue !== undefined ? dec.convertor(rawValue) : dec.default?.() ?? undefined) as T | undefined;
+
+        return value;
     }
 
 
-    shouldHelp(): boolean {
-        return !!this.#getRawFlag('help');
+    hasFlag(name: string): boolean {
+        try {
+            return this.#getFlag(name) !== undefined;
+        } catch (_error) {
+            return false;
+        }
     }
 
 
-    setDescription(description: string) {
-        this.#desciprion = description;
+    getFlag<T>(name: string): T {
+        if (!this.hasFlag(name)) {
+            throw new Error("Argument has not been set.");
+        }
+
+        return this.#getFlag(name)!;
+    }
+
+
+    isHelpRequested(): boolean {
+        return !!this.#getRawFlag(helpFlagNames[0]);
     }
 
 
@@ -142,10 +231,10 @@ export class Arguments {
     }
 
 
-    getHelpMessage(): string {
+    computeHelpMessage(): string {
         const tab = (n = 1) => ' '.repeat(Math.max(n, 1) * 2);
 
-        const declarations = Array.from(this.#declarations.entries())
+        const declarations = Array.from(this.#flagDeclarations.entries())
             .map(([_, dec]) => dec)
             .filter(({ excludeFromHelp }) => !excludeFromHelp)
             .map(dec => {
@@ -183,7 +272,7 @@ export class Arguments {
 
 
     triggerHelp() {
-        throw new InfoInterruption(this.getHelpMessage());
+        throw new InfoInterruption(this.computeHelpMessage());
     }
 
 
@@ -193,16 +282,7 @@ export class Arguments {
 
 
     static rethrowUnprintableException(error: Error) {
-        if (!Arguments.isPrintableException(error)) throw error;
+        if (!(error instanceof PrintableException)) throw error;
     }
 
-
-    static createHelpDeclaration(): Declaration<boolean> {
-        return {
-            name: ['help', 'h'],
-            type: 'boolean',
-            description: 'Show this help message.',
-            excludeFromHelp: true,
-        }
-    }
 }
