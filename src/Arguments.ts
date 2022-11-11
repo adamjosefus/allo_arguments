@@ -98,7 +98,11 @@ export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyo
         this.#rawArgs = parse(Deno.args);
     }
 
-
+    /**
+     * Gets converted flag values.
+     * 
+     * @returns The key-value pairs of the flags.
+     */
     getFlags(): FlagValues {
         const entries = Array.from(this.#flagDeclarations.keys())
             .map(longName => {
@@ -109,7 +113,10 @@ export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyo
         return Object.fromEntries(entries) as FlagValues;
     }
 
-
+    /**
+     * @param description The description of the program.
+     * @returns self for chaining.
+     */
     setDesciprion(description: string) {
         this.#desciprion = description.trim();
 
@@ -143,7 +150,11 @@ export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyo
         return value;
     }
 
-
+    /**
+     * Gets boolean value indicating whether the help flag is requested.
+     * 
+     * @returns `true` if the help flag is present.
+     */
     isHelpRequested(): boolean {
         return this.#getFlagValue(helpFlagNames[0]) === true;
     }
@@ -156,7 +167,11 @@ export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyo
         return this.isHelpRequested();
     }
 
-
+    /**
+     * If this method is called, the program will exit with the message and wait for the user to press any key.
+     * 
+     * @param message The message to print.
+     */
     keepProcessAlive(message = 'Press Enter key to exit the process...') {
         globalThis.addEventListener('unload', () => {
             prompt(message);
@@ -164,12 +179,15 @@ export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyo
     }
 
 
+    /**
+     * Prints the help message and exits the process.
+     */
     triggerHelp() {
-        throw new InfoInterruption(this.computeHelpMessage());
+        throw new InfoInterruption(this.#computeHelpMessage());
     }
 
 
-    computeHelpMessage(): string {
+    #computeHelpMessage(): string {
         const tab = (n = 1) => ' '.repeat(Math.max(n, 1) * 2);
 
         const declarations = Array.from(this.#flagDeclarations.entries())
@@ -220,17 +238,39 @@ export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyo
         ].filter(s => s.trim() !== '').join('\n');
     }
 
-
+    /**
+     * Detect if the error is instance of `PrintableException` class.
+     */
     static isPrintableException(error: Error): boolean {
         return error instanceof PrintableException;
     }
 
-
+    /**
+     * Trows the error if it is not instance of `PrintableException` class.
+     * 
+     * @example
+     * ```ts
+     * try {
+     *    // ...
+     * } catch (error) {
+     *   Arguments.throwIfNotPrintable(error);
+     * }
+     * ```
+     */
     static rethrowUnprintableException(error: Error) {
         if (!(error instanceof PrintableException)) throw error;
     }
 
-
+    /**
+     * Creates options of `help` flag.
+     * 
+     * @example
+     * ```ts
+     * const args = new Arguments({
+     *    ...Arguments.createHelp(),
+     *   // ...
+     * });
+     */
     static createHelp() {
         return {
             [helpFlagNames[0]]: {

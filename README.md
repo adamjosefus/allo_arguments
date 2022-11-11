@@ -7,78 +7,51 @@ It allows you to assign default values to them, process them and automatically g
 ## Example
 
 ```ts
-import { join } from "https://deno.land/std@0.138.0/path/mod.ts";
+import { join } from "https://deno.land/std/path/mod.ts";
 import { Arguments, ExpectedException } from "https://deno.land/x/allo_arguments/mod.ts";
 
 
 function getArguments() {
-    const configConvertor = (v: string | null): string => {
-        if (v == null) throw new ExpectedException(`Path to configuration file is not set. You can set it using "--config=<path>"`)
-
-        return join(Deno.cwd(), v);
-    }
-
-    const sleepConvertor = (v: string | number | null): number | null => {
-        if (v === null) return null;
-        if (typeof v === "string") v = parseInt(v, 10);
-
-        if (isNaN(v)) throw new ExpectedException(`The sleep time must be a valid number. "--sleep=<number>"`)
-        if (v <= 200) throw new ExpectedException(`The sleep time must not be less than 200 ms. "--sleep=<number>"`)
-
-        return v;
-    }
-
-    const booleanConvertor = (v: boolean | string | null) => v === true || v === 'true';
-
-
-    const args = new Arguments(
-        {
-            name: 'config, c',
-            description: [
-                `Path to the configuration file.`,
-                `Format of file is JSON.`,
-            ],
-            convertor: configConvertor,
-            default: 'config.json'
+    const args = new Arguments({
+        ...Arguments.createHelp(),
+        myString: {
+            shortName: 's',
+            description: 'This is a string flag.',
+            convertor: Arguments.stringConvertor,
         },
-        {
-            name: 'delete',
-            description: `Deletes all folders according to the configuration file.`,
-            convertor: booleanConvertor,
-            default: false,
+        myNumber: {
+            shortName: 'n',
+            description: 'This is a number flag.',
+            convertor: Arguments.numberConvertor,
         },
-        {
-            name: 'sleep, s',
-            description: `Sleep duration between processes in milliseconds.`,
-            convertor: sleepConvertor,
-            default: 5000,
+        myBoolean: {
+            shortName: 'b',
+            description: 'This is a boolean flag.',
+            convertor: Arguments.booleanConvertor,
         },
-    );
+        myCustom: {
+            shortName: 'c',
+            description: 'This is a custom flag.',
+            convertor: value => {
+                if (value === undefined) return undefined;
 
-    args.setDescription(`My beautiful program.`);
-    args.keepProcessAlive();
+                return `🐰 — ${value} — 🐭`;
+            },
+        },
+    })
+    .setDesciprion("This is a demo of the arguments library.")
+
 
     // Important for `--help` flag works.
-    if (args.shouldHelp()) args.triggerHelp();
+    if (args.isHelpRequested()) args.triggerHelp();
 
-
-    return {
-        config: args.get<string>('config'),
-        delete: args.get<boolean>('delete'),
-        sleep: args.get<number>('sleep'),
-    }
+    return args.getFlags();
 }
 
 
 try {
     const args = getArguments();
-
     console.log(args);
-    // {
-    //   config: "/some/project/path/config.json",
-    //   delete: false,
-    //   sleep: 5000
-    // }
 
 } catch (error) {
     Arguments.rethrowUnprintableException(error);

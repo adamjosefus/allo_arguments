@@ -1,10 +1,7 @@
 /**
  * @copyright Copyright (c) 2022 Adam Josefus
  */
-
-import { join } from "../libs/deno_std/path.ts";
-import { Arguments, ExpectedException } from "../mod.ts";
-
+import { Arguments } from "../mod.ts";
 
 function getArguments() {
     const args = new Arguments({
@@ -46,12 +43,7 @@ function getArguments() {
 
 try {
     const args = getArguments();
-
-    console.log(Deno.inspect(args, {
-        colors: true,
-        depth: Infinity,
-        compact: false,
-    }));
+    console.log(args);
 
 } catch (error) {
     Arguments.rethrowUnprintableException(error);
