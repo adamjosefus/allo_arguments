@@ -17,6 +17,9 @@ export const secondary = (s: string): string => {
 }
 
 
-export const inspect = (s: unknown): string => {
-    return Deno.inspect(s, { colors: !Deno.noColor });
+export const inspect = (v: unknown): string => {
+    return Deno.inspect(v, {
+        colors: !Deno.noColor,
+        compact: false,
+    });
 }

@@ -2,7 +2,7 @@
  * @copyright Copyright (c) 2022 Adam Josefus
  */
 import { Command, Flag, parse } from "./model/parse.ts";
-import { primary, secondary } from "./helpers/colors.ts";
+import { inspect, primary, secondary } from "./helpers/colors.ts";
 import { InfoInterruption } from "./InfoInterruption.ts";
 import { PrintableException } from "./PrintableException.ts";
 
@@ -214,10 +214,7 @@ export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyo
                 const defaultValue = (indent: number) => {
                     if (dec.default === undefined) return '';
 
-                    const serialized = Deno.inspect(dec.default(), {
-                        colors: true,
-                        compact: false,
-                    }).split('\n');
+                    const serialized = inspect(dec.default()).split('\n');
 
                     return tab(indent) + secondary(`Default: `) + serialized.join('\n' + tab(indent + 2));
                 }
