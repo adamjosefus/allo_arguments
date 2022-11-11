@@ -5,6 +5,8 @@
 import { parse as stdParse } from "../../libs/deno_std/flags.ts";
 
 
+type WithoutTag<T> = Omit<T, "_tag">;
+
 interface Argument {
     name: string,
     order: number,
@@ -20,19 +22,16 @@ export interface Flag extends Argument {
     short: boolean,
 }
 
-type WithoutTag<T> = Omit<T, "_tag">;
-
-
 const createCommand = (command: WithoutTag<Command>): Command => ({
     ...command,
     _tag: "Command",
 });
 
+
 const createFlag = (flag: WithoutTag<Flag>): Flag => ({
     ...flag,
     _tag: "Flag",
 });
-
 
 const isShortFlag = (arg: string) => arg.startsWith("-") && !arg.startsWith("--");
 
@@ -43,6 +42,8 @@ const withoutKey = <T = unknown>(obj: Record<string, T>, key: string) => {
 
 
 /**
+ * Custom CLI parser.
+ * 
  * @example
  * ```ts
  * const args = parse(Deno.args());
