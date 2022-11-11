@@ -2,7 +2,7 @@
  * @copyright Copyright (c) 2022 Adam Josefus
  */
 
-import * as colors from "https://deno.land/std@0.138.0/fmt/colors.ts";
+import * as colors from "../../libs/deno_std/fmt_colors.ts";
 
 
 export const primary = (s: string): string => {
@@ -17,6 +17,9 @@ export const secondary = (s: string): string => {
 }
 
 
-export const inspect = (s: unknown): string => {
-    return Deno.inspect(s, { colors: !Deno.noColor });
+export const inspect = (v: unknown): string => {
+    return Deno.inspect(v, {
+        colors: !Deno.noColor,
+        compact: false,
+    });
 }
