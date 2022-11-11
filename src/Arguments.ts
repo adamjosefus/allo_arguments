@@ -65,16 +65,16 @@ const normalizeShortName = (name: string) => normalizeName(name).substring(0, 1)
 const createFlagDeclarations = (options: Record<string, FlagOptions<unknown>>) => {
     const entries = Object.entries(options)
         .map(([name, op]) => {
-            return {
-                longName: normalizeName(name),
+            const normalizedName = normalizeName(name);
+            return [normalizedName, {
+                longName: name,
                 shortName: op.shortName ? normalizeShortName(op.shortName) : undefined,
                 description: op.description?.trim().split('\n') ?? undefined,
                 default: op.default,
                 convertor: op.convertor,
                 excludeFromHelp: op.excludeFromHelp ?? false,
-            }
-        })
-        .map(declaration => [declaration.longName, declaration] as [string, FlagDeclaration]);
+            }] as [string, FlagDeclaration];
+        });
 
     return new Map(entries);
 }
@@ -105,10 +105,7 @@ export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyo
      */
     getFlags(): FlagValues {
         const entries = Array.from(this.#flagDeclarations.keys())
-            .map(longName => {
-                const value = this.#getFlagValue(longName);
-                return [longName, value] as [string, unknown];
-            })
+            .map(normalizedName => this.#getFlag(normalizedName));
 
         return Object.fromEntries(entries) as FlagValues;
     }
@@ -127,27 +124,25 @@ export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyo
     #getRaw(name: string, tag: 'Flag'): Flag | undefined;
     #getRaw(name: string, tag: 'Command'): Flag | undefined;
     #getRaw(name: string, tag: 'Flag' | 'Command'): unknown | undefined {
-        const flag = this.#rawArgs.filter(arg => arg._tag === tag) // Filter out commands
-            .find(f => normalizeName(name) === normalizeName(f.name));
+        const flag = this.#rawArgs
+            .filter(arg => arg._tag === tag) // Filter out commands
+            .find(f => normalizeName(f.name) === normalizeName(name));
 
         return flag;
     }
 
 
-    #getFlagValue<T>(name: string): T | undefined {
-        const notFoundMessage = `Argument "${name}" is not declared.`;
+    #getFlag<T>(normalizedName: string): [longName: string, value: T | undefined] {
+        const notFoundMessage = `Argument "${normalizedName}" is not declared.`;
         const getRawFlag = (name: string) => this.#getRaw(name, 'Flag');
 
-        const dec = this.#flagDeclarations.get(normalizeName(name));
+        const dec = this.#flagDeclarations.get(normalizeName(normalizedName));
         if (!dec) throw new Error(notFoundMessage);
-
-        const flag = getRawFlag(dec.longName);
-        if (!flag) throw new Error(notFoundMessage);
 
         const rawValue = getRawFlag(dec.longName)?.value;
         const value = (rawValue !== undefined ? dec.convertor(rawValue) : dec.default?.() ?? undefined) as T | undefined;
 
-        return value;
+        return [dec.longName, value];
     }
 
     /**
@@ -156,7 +151,9 @@ export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyo
      * @returns `true` if the help flag is present.
      */
     isHelpRequested(): boolean {
-        return this.#getFlagValue(helpFlagNames[0]) === true;
+        const [_longName, value] = this.#getFlag(helpFlagNames[0]);
+
+        return value === true;
     }
 
 
