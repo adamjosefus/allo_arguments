@@ -1,15 +1,7 @@
-# **Allo Arguments** for Deno 🦕
-
-A library for Deno that parses the terminal's input parameters.
-It allows you to assign default values to them, process them and automatically generate a message for `--help`.
-
-
-## Example
-
-```ts
-import { join } from "https://deno.land/std/path/mod.ts";
-import { Arguments, ExpectedException } from "https://deno.land/x/allo_arguments/mod.ts";
-
+/**
+ * @copyright Copyright (c) 2022 Adam Josefus
+ */
+import { Arguments } from "../mod.ts";
 
 function getArguments() {
     const args = new Arguments({
@@ -56,12 +48,3 @@ try {
 } catch (error) {
     Arguments.rethrowUnprintableException(error);
 }
-```
-
-## Documentation 📖
-
-Description of all classes and methods will found in the [documentation](https://doc.deno.land/https://deno.land/x/allo_arguments/mod.ts).
-
----
-
-Check out other [ours packages 📦](https://deno.land/x?query=allo_)!

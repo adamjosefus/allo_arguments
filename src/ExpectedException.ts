@@ -5,21 +5,14 @@
 import { PrintableException } from "./PrintableException.ts";
 
 
-export class InfoInterruption extends PrintableException {
+export class ExpectedException extends PrintableException {
     constructor(message: string) {
         console.log('\n');
-        console.log(message);
+        message.split('\n').map(l => {
+            console.log(`>> %c ${l}`, 'color: #ff4646; font-weight: bold;');
+        });
         console.log('\n');
 
         super(message);
-        
-        Deno.exit(0);
     }
-}
-
-
-/**
- * @deprecated Use `InfoInterruption` instead.
- */
-export class HelpInterruption extends InfoInterruption {
 }
