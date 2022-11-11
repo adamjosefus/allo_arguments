@@ -14,22 +14,23 @@ import { Arguments, ExpectedException } from "https://deno.land/x/allo_arguments
 function getArguments() {
     const args = new Arguments({
         ...Arguments.createHelp(),
-        myString: {
+        'myString': {
             shortName: 's',
             description: 'This is a string flag.',
             convertor: Arguments.stringConvertor,
         },
-        myNumber: {
+        'myNumber': {
             shortName: 'n',
             description: 'This is a number flag.',
             convertor: Arguments.numberConvertor,
+            default: () => 0
         },
-        myBoolean: {
+        'myBoolean': {
             shortName: 'b',
             description: 'This is a boolean flag.',
             convertor: Arguments.booleanConvertor,
         },
-        myCustom: {
+        'myCustom': {
             shortName: 'c',
             description: 'This is a custom flag.',
             convertor: value => {
@@ -37,6 +38,10 @@ function getArguments() {
 
                 return `🐰 — ${value} — 🐭`;
             },
+        },
+        'myDeprecated': {
+            convertor: Arguments.stringConvertor,
+            excludeFromHelp: true
         },
     })
     .setDesciprion("This is a demo of the arguments library.")
