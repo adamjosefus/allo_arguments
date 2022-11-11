@@ -2,7 +2,7 @@
  * @copyright Copyright (c) 2022 Adam Josefus
  */
 
-import { parse as stdParse } from "../../libs/deno_std/flags.ts";
+import { parse as stdParse } from "../libs/deno_std/flags.ts";
 
 
 type WithoutTag<T> = Omit<T, "_tag">;

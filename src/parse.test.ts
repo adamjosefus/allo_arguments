@@ -2,7 +2,7 @@
  * @copyright Copyright (c) 2022 Adam Josefus
  */
 
-import { assertEquals } from "../../libs/deno_std/testing_asserts.ts";
+import { assertEquals } from "../libs/deno_std/testing_asserts.ts";
 import { parse } from "./parse.ts";
 
 

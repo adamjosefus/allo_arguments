@@ -1,7 +1,7 @@
 /**
  * @copyright Copyright (c) 2022 Adam Josefus
  */
-import { Command, Flag, parse } from "./model/parse.ts";
+import { Command, Flag, parse } from "./parse.ts";
 import { inspect, primary, secondary } from "./helpers/colors.ts";
 import { InfoInterruption } from "./InfoInterruption.ts";
 import { PrintableException } from "./PrintableException.ts";
