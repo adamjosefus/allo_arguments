@@ -274,16 +274,24 @@ export class Arguments<T extends FlagOptionMap, FlagValues = {
      *   // ...
      * });
      */
-    static createHelp() {
+    static createHelpOptions() {
         return {
             [helpFlagNames[0]]: {
-                convertor: booleanConvertor,
                 shortName: helpFlagNames[1],
                 description: 'Show this help message.',
+                convertor: booleanConvertor,
+                default: () => false,
                 excludeFromHelp: true,
             } as const
         } as const
+        // } satisfies FlagOptions<boolean>; // For typescript >= 4.9
     }
+
+
+    /**
+     * @deprecated Use `createHelpOptions` instead.
+     */
+    static createHelp = Arguments.createHelpOptions;
 
 
     static booleanConvertor = booleanConvertor;

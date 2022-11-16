@@ -5,7 +5,7 @@ import { Arguments } from "../mod.ts";
 
 function getArguments() {
     const args = new Arguments({
-        ...Arguments.createHelp(),
+        ...Arguments.createHelpOptions(),
         'myString': {
             shortName: 's',
             description: 'This is a string flag.',

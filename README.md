@@ -13,7 +13,7 @@ import { Arguments, ExpectedException } from "https://deno.land/x/allo_arguments
 
 function getArguments() {
     const args = new Arguments({
-        ...Arguments.createHelp(),
+        ...Arguments.createHelpOptions(),
         'myString': {
             shortName: 's',
             description: 'This is a string flag.',
