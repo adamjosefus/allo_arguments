@@ -7,7 +7,7 @@ import { InfoInterruption } from "./InfoInterruption.ts";
 import { PrintableException } from "./PrintableException.ts";
 
 
-type FlagOptions<T> = {
+export type FlagOptions<T> = {
     convertor: Convertor<T>,
     shortName?: string,
     description?: string,
@@ -15,6 +15,9 @@ type FlagOptions<T> = {
     excludeFromHelp?: boolean,
 }
 
+/**
+ * @internal
+ */
 interface FlagDeclaration {
     longName: string,
     shortName: string | undefined,
@@ -28,6 +31,7 @@ interface FlagDeclaration {
 export type Convertor<T> = {
     (value: undefined | string | boolean): T | undefined;
 }
+
 
 // Convertors
 export const booleanConvertor: Convertor<boolean> = v => {
@@ -79,12 +83,17 @@ const createFlagDeclarations = (options: Record<string, FlagOptions<unknown>>) =
     return new Map(entries);
 }
 
+
 type FlagOptionMap = {
     [longName: string]: FlagOptions<unknown>,
 }
 
 
-export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyof T]: ReturnType<T[longName]['convertor']> | undefined }> {
+export class Arguments<T extends FlagOptionMap, FlagValues = {
+    [longName in keyof T]: T[longName]['default'] extends () => infer U
+        ? (ReturnType<T[longName]['convertor']> extends U | undefined ? U : ReturnType<T[longName]['convertor']> | U)
+        : ReturnType<T[longName]['convertor']>
+}> {
 
     #rawArgs: readonly Readonly<Flag | Command>[];
 
