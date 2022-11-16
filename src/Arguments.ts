@@ -274,7 +274,7 @@ export class Arguments<T extends FlagOptionMap, FlagValues = {
      *   // ...
      * });
      */
-    static createHelpOption() {
+    static createHelpOptions() {
         return {
             [helpFlagNames[0]]: {
                 shortName: helpFlagNames[1],
@@ -289,9 +289,9 @@ export class Arguments<T extends FlagOptionMap, FlagValues = {
 
 
     /**
-     * @deprecated Use `createHelpOption` instead.
+     * @deprecated Use `createHelpOptions` instead.
      */
-    static createHelp = Arguments.createHelpOption;
+    static createHelp = Arguments.createHelpOptions;
 
 
     static booleanConvertor = booleanConvertor;
