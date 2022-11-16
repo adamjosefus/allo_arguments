@@ -44,7 +44,7 @@ function getArguments() {
             excludeFromHelp: true
         },
     })
-    .setDesciprion("This is a demo of the arguments library.")
+    .setDescription("This is a demo of the arguments library.")
 
 
     // Important for `--help` flag works.
