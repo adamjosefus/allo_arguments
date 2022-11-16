@@ -90,7 +90,7 @@ export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyo
 
     #flagDeclarations: Map<string, FlagDeclaration> = new Map();
 
-    #desciprion: string | null = null;
+    #description: string | null = null;
 
 
     constructor(flagOptions: T) {
@@ -114,8 +114,8 @@ export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyo
      * @param description The description of the program.
      * @returns self for chaining.
      */
-    setDesciprion(description: string) {
-        this.#desciprion = description.trim();
+    setDescription(description: string) {
+        this.#description = description.trim();
 
         return this;
     }
@@ -224,7 +224,7 @@ export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyo
             }).join('\n\n');
 
 
-        const description: string = this.#desciprion ?? '';
+        const description: string = this.#description ?? '';
 
         return [
             `\n${description}`,
