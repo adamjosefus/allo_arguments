@@ -89,7 +89,11 @@ type FlagOptionMap = {
 }
 
 
-export class Arguments<T extends FlagOptionMap, FlagValues = { [longName in keyof T]: ReturnType<T[longName]['convertor']> | undefined }> {
+export class Arguments<T extends FlagOptionMap, FlagValues = {
+    [longName in keyof T]: T[longName]['default'] extends () => infer U
+        ? (ReturnType<T[longName]['convertor']> extends U | undefined ? U : ReturnType<T[longName]['convertor']> | U)
+        : ReturnType<T[longName]['convertor']>
+}> {
 
     #rawArgs: readonly Readonly<Flag | Command>[];
 
