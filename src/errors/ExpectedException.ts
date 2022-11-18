@@ -6,13 +6,13 @@ import { PrintableException } from "./PrintableException.ts";
 
 
 export class ExpectedException extends PrintableException {
-    constructor(message: string) {
+    constructor(message: string, callback?: () => void) {
         console.log('\n');
         message.split('\n').map(l => {
             console.log(`>> %c ${l}`, 'color: #ff4646; font-weight: bold;');
         });
         console.log('\n');
 
-        super(message);
+        super(message, callback);
     }
 }

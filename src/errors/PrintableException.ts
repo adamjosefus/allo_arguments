@@ -3,4 +3,9 @@
  */
 
 export abstract class PrintableException extends Error {
+    constructor(message: string, callback: (() => void) | undefined) {
+        if (callback) callback()
+
+        super(message);
+    }
 }
