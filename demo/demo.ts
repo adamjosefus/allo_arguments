@@ -1,7 +1,9 @@
 /**
  * @copyright Copyright (c) 2022 Adam Josefus
  */
+
 import { Arguments } from "../mod.ts";
+
 
 function getArguments() {
     const args = new Arguments({
