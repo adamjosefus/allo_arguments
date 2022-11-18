@@ -4,8 +4,9 @@
 
 import { Command, Flag, parse } from "./parse.ts";
 import { inspect, primary, secondary } from "./helpers/colors.ts";
-import { InfoInterruption } from "./errors/InfoInterruption.ts";
-import { PrintableException } from "./errors/PrintableException.ts";
+import { PrintableException, InfoInterruption } from "./exceptions.ts";
+import { Convertor } from "./Convertor.ts";
+import { booleanConvertor, numberConvertor, strictBooleanConvertor, strictNumberConvertor, strictStringConvertor, stringConvertor } from "./convertors.ts";
 
 
 export type FlagOptions<T> = {
@@ -26,39 +27,6 @@ interface FlagDeclaration {
     default: (() => unknown) | undefined,
     convertor: Convertor<unknown>,
     excludeFromHelp: boolean,
-}
-
-
-export type Convertor<T> = {
-    (value: undefined | string | boolean): T | undefined;
-}
-
-
-// Convertors
-export const booleanConvertor: Convertor<boolean> = v => {
-    if (v === undefined) return false;
-    if (v === null) return false;
-    if (v === false) return false;
-    if (v === true) return true;
-
-    const s = `${v}`.toLowerCase().trim();
-
-    if (s === 'true') return true;
-    if (s === '1') return true;
-
-    return true;
-}
-
-export const stringConvertor: Convertor<string> = v => {
-    if (v === undefined) return undefined;
-
-    return `${v}`;
-}
-
-export const numberConvertor: Convertor<number> = v => {
-    if (v === undefined) return undefined;
-
-    return Number(v);
 }
 
 
@@ -92,8 +60,8 @@ type FlagOptionMap = {
 
 export class Arguments<T extends FlagOptionMap, FlagValues = {
     [longName in keyof T]: T[longName]['default'] extends () => infer U
-        ? (ReturnType<T[longName]['convertor']> extends U | undefined ? U : ReturnType<T[longName]['convertor']> | U)
-        : ReturnType<T[longName]['convertor']>
+    ? (ReturnType<T[longName]['convertor']> extends U | undefined ? U : ReturnType<T[longName]['convertor']> | U)
+    : ReturnType<T[longName]['convertor']>
 }> {
 
     #rawArgs: readonly Readonly<Flag | Command>[];
@@ -280,8 +248,7 @@ export class Arguments<T extends FlagOptionMap, FlagValues = {
             [helpFlagNames[0]]: {
                 shortName: helpFlagNames[1],
                 description: 'Show this help message.',
-                convertor: booleanConvertor,
-                default: () => false,
+                convertor: strictBooleanConvertor,
                 excludeFromHelp: true,
             } as const
         } as const
@@ -289,13 +256,14 @@ export class Arguments<T extends FlagOptionMap, FlagValues = {
     }
 
 
-    /**
-     * @deprecated Use `createHelpOptions` instead.
-     */
-    static createHelp = Arguments.createHelpOptions;
-
-
     static booleanConvertor = booleanConvertor;
+    static strictBooleanConvertor = strictBooleanConvertor;
+
+
     static numberConvertor = numberConvertor;
+    static strictNumberConvertor = strictNumberConvertor;
+
+
     static stringConvertor = stringConvertor;
+    static strictStringConvertor = strictStringConvertor;
 }
