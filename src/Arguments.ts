@@ -1,10 +1,11 @@
 /**
  * @copyright Copyright (c) 2022 Adam Josefus
  */
+
 import { Command, Flag, parse } from "./parse.ts";
 import { inspect, primary, secondary } from "./helpers/colors.ts";
-import { InfoInterruption } from "./InfoInterruption.ts";
-import { PrintableException } from "./PrintableException.ts";
+import { InfoInterruption } from "./errors/InfoInterruption.ts";
+import { PrintableException } from "./errors/PrintableException.ts";
 
 
 export type FlagOptions<T> = {
