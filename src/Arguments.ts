@@ -112,12 +112,24 @@ export class Arguments<T extends FlagOptionMap, FlagValues = {
 
     #getFlag<T>(normalizedName: string): [longName: string, value: T | undefined] {
         const notFoundMessage = `Argument "${normalizedName}" is not declared.`;
-        const getRawFlag = (name: string) => this.#getRaw(name, 'Flag');
+
+        const getRawFlag = (type: 'long' | 'short', name: string | undefined) => {
+            if (!name) return undefined;
+
+            const raw = this.#getRaw(name, 'Flag');
+            if (!raw) return undefined;
+
+            if (raw.short && type === 'short') return raw;
+            else if (!raw.short && type === 'long') return raw;
+
+            return undefined;
+        };
 
         const dec = this.#flagDeclarations.get(normalizeName(normalizedName));
         if (!dec) throw new Error(notFoundMessage);
 
-        const rawValue = getRawFlag(dec.longName)?.value;
+        const flag = getRawFlag('long', dec.longName) ?? getRawFlag('short', dec.shortName);
+        const rawValue = flag?.value;
         const value = (rawValue !== undefined ? dec.convertor(rawValue) : dec.default?.() ?? undefined) as T | undefined;
 
         return [dec.longName, value];
