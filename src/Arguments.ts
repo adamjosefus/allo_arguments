@@ -81,11 +81,11 @@ export class Arguments<T extends FlagOptionMap, FlagValues = {
      * 
      * @returns The key-value pairs of the flags.
      */
-    getFlags(): FlagValues {
+    getFlags(): Readonly<FlagValues> {
         const entries = Array.from(this.#flagDeclarations.keys())
             .map(normalizedName => this.#getFlag(normalizedName));
 
-        return Object.fromEntries(entries) as FlagValues;
+        return Object.freeze(Object.fromEntries(entries) as FlagValues);
     }
 
     /**
